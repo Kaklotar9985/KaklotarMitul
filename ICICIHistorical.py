@@ -122,6 +122,24 @@ def Fetch_Historical_Data ( breeze, exchange_code, stock_code, strike_price, int
 # print(Data)
 #_______________________________________________________________________________________________________________________________________________
 
+# Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File  
+def Downlod_File(FilePath, FileName, fileType, Data):
+    try:
+        file_path = f'{FilePath}{FileName}.{fileType}'
+
+        if fileType == 'csv':
+            Data.to_csv(file_path, index=False)
+        elif fileType == 'excel':
+            Data.to_excel(file_path, index=False)
+        elif fileType == 'json':
+            Data.to_json(file_path, orient='records')
+        else:
+            print("Unsupported file type")
+    except Exception as e:
+        print(f"Downlod_File Function Error: {e}")
+
+#_______________________________________________________________________________________________________________________________________________
+
 
 
 # MCX_Data
