@@ -3,7 +3,7 @@ from dateutil import parser
 import pandas as pd
 
 # Fetch_MCX_Data   Fetch_MCX_Data   Fetch_MCX_Data   Fetch_MCX_Data   Fetch_MCX_Data   Fetch_MCX_Data   Fetch_MCX_Data   Fetch_MCX_Data   Fetch_MCX_Data
-def Fetch_MCX_Data ( exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
+def Fetch_MCX_Data ( breeze,exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
     try:
         fetch_Futures_Data_Error = {}
         Datas_List = []
@@ -93,16 +93,16 @@ def fetch_Merged_Data(DATA1, DATA2):
 # print(tabulate(Merged_Data.head(5), headers='keys', tablefmt='pretty', showindex=False))
 #______________________________________________________________________________________________________________________________
 #  Fetch_Historical_Data   Fetch_Historical_Data   Fetch_Historical_Data   Fetch_Historical_Data    Fetch_Historical_Data  Fetch_Historical_Data
-def Fetch_Historical_Data ( exchange_code, stock_code, strike_price, interval, Expiry_Date, past_day):
+def Fetch_Historical_Data ( breeze, exchange_code, stock_code, strike_price, interval, Expiry_Date, past_day):
     try:
         if strike_price == '0':
           product_type  = "futures"
           right         = "others"
-          Data = Fetch_MCX_Data ( exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day)
+          Data = Fetch_MCX_Data ( breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day)
         if strike_price != '0':
           product_type  = "options"
-          Data_call = Fetch_MCX_Data ( exchange_code, stock_code, product_type, "call", strike_price, interval, Expiry_Date, past_day)
-          Data_put  = Fetch_MCX_Data ( exchange_code, stock_code, product_type, "put",  strike_price, interval, Expiry_Date, past_day)
+          Data_call = Fetch_MCX_Data ( breeze, exchange_code, stock_code, product_type, "call", strike_price, interval, Expiry_Date, past_day)
+          Data_put  = Fetch_MCX_Data ( breeze, exchange_code, stock_code, product_type, "put",  strike_price, interval, Expiry_Date, past_day)
           if Data_call is not None and Data_put is not None:
               Data = fetch_Merged_Data(Data_call, Data_put)
         return Data
