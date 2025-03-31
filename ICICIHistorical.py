@@ -122,6 +122,20 @@ def Fetch_Historical_Data ( breeze, exchange_code, stock_code, strike_price, int
 # print(Data)
 #_______________________________________________________________________________________________________________________________________________
 
+# fetch_Strike_Range  fetch_Strike_Range  fetch_Strike_Range  fetch_Strike_Range  fetch_Strike_Range  fetch_Strike_Range  fetch_Strike_Range  fetch_Strike_Range  
+def fetch_Strike_Range(Data, Expiry_Date):
+    try:
+        filtered_data = [entry for entry in Data if entry['Options_Expiry'] == Expiry_Date]
+        if filtered_data:
+            return filtered_data[0]
+        else:
+            print("No data found for Expiry_Date:", Expiry_Date)
+            return None  # Return None if no matching data is found
+    except Exception as e:
+        print(f"fetch_Strike_Range Function Error: {e}")
+        return None
+#_______________________________________________________________________________________________________________________________________________
+
 # Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File   Downlod_File  
 def Downlod_File(FilePath, FileName, fileType, Data):
     try:
