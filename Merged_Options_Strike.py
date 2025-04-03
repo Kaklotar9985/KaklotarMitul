@@ -5,7 +5,7 @@ import os
 def Extract_Expiry(expiry_date):
     try:
         year = expiry_date.split("-")[-1]
-        zip_path = f"/content/drive/MyDrive/Downlod_Options_Data/ALL_Data/BankNifty_Options.zip"
+        zip_path = f"/content/drive/MyDrive/Downlod_Options_Data/ALL_Data/BankNifty_All_Strike_Data.zip"
         extract_path = f"/content/Extract/{expiry_date}/"
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_files = zip_ref.namelist()
