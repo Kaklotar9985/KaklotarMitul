@@ -2,10 +2,10 @@ import pandas as pd
 import zipfile
 import os
 # Extract_Expiry   Extract_Expiry   Extract_Expiry   Extract_Expiry   Extract_Expiry   Extract_Expiry   Extract_Expiry   Extract_Expiry
-def Extract_Expiry(expiry_date):
+def Extract_Expiry(expiry_date, Symbol):
     try:
         year = expiry_date.split("-")[-1]
-        zip_path = f"/content/drive/MyDrive/Downlod_Options_Data/ALL_Data/BankNifty_All_Strike_Data.zip"
+        zip_path = f"/content/drive/MyDrive/Downlod_Options_Data/ALL_Data/{Symbol.lower()}_All_Strike_Data.zip"
         extract_path = f"/content/Extract/{expiry_date}/"
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_files = zip_ref.namelist()
