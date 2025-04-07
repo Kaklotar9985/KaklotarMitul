@@ -37,7 +37,47 @@ market_open_dates        = ['01-01-2021', '04-01-2021', '05-01-2021', '06-01-202
 
 Strike_Gep_List          = {"nifty" : 50, "banknifty" : 100, }
 
+# get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry   get_Expiry  
+def get_Symbol_Expiry(Dates, Symbol, Expiry_Period, Expiry_Type):
+    global banknifty_monthly_expiry, nifty_monthly_expiry, nifty_weekly_expiry, naturalgas_futures_monthly_expiry
+    try:
+        if Expiry_Period.lower() == "weekiy" and Symbol.lower() == "nifty" :
+          Expiry_List = nifty_weekly_expiry
 
+        if Expiry_Period.lower() == "monthly":
+          if Symbol.lower() == "nifty":
+              Expiry_List = nifty_monthly_expiry
+          if Symbol.lower() == "banknifty":
+              Expiry_List = banknifty_monthly_expiry
+          if Symbol.lower() == "naturalgas":
+              Expiry_List = naturalgas_futures_monthly_expiry
+        try:
+          Date = pd.to_datetime(Dates, format="%d-%m-%Y")
+        except:
+          try:
+              Date = pd.to_datetime(Dates, format="%d-%m-%Y %H:%M")
+          except:
+              Date = pd.to_datetime(Dates, format="%Y-%m-%d %H:%M:%S")
+
+        Expiry_List = pd.to_datetime(pd.Series(Expiry_List), format="%d-%m-%Y")
+        filtered = Expiry_List[Expiry_List >= Date].dt.strftime("%d-%m-%Y").tolist()
+        if Expiry_Type.lower() == "current":
+          Date = filtered[0]
+        if Expiry_Type.lower() == "next":
+          Date = filtered[1]
+        return Date
+    except Exception as e:
+        print(f"get_Expiry Function Error: {e}")
+        return None
+
+# # Example usage
+# Dates          = "05-01-2024"
+# Symbol         = "naturalgas" # nifty  banknifty  naturalgas
+# Expiry_Period  = "Monthly"  # "Weekiy" , "Monthly" 
+# Expiry_Type    = "Current"  # "Current", "Next"
+# Expirys        = get_Expiry(Dates, Symbol, Expiry_Period, Expiry_Type)
+# print(Expirys)
+#________________________________________________________________________________________________________________________________________________________
 
 # Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip   Extract_Zip
 Options_Data = {}
