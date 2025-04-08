@@ -284,8 +284,14 @@ def get_Symbol_Data(Symbol, Start_Date, End_Date):
            Data["Date_Time"] = pd.to_datetime(Data["Date_Time"], format="%d-%m-%Y %H:%M")
         except:
            Data = Data.rename(columns={"datetime": "Date_Time"})
-           Data["Date_Time"] = pd.to_datetime(Data["Date_Time"], format="%d-%m-%Y %H:%M")
-        Data = Data[(Data["Date_Time"] >= Start_Date) & (Data["Date_Time"] <= End_Date)].copy()
+           try: 
+              Data["Date_Time"] = pd.to_datetime(Data["Date_Time"], format="%d-%m-%Y %H:%M")
+           except:
+              Data["Date_Time"] = pd.to_datetime(Data["Date_Time"], format="%Y-%m-%d %H:%M:%S")
+                    
+      
+  
+Data = Data[(Data["Date_Time"] >= Start_Date) & (Data["Date_Time"] <= End_Date)].copy()
         Data.reset_index(drop=True, inplace=True)
         Data["Date_Time"] = Data["Date_Time"].dt.strftime("%d-%m-%Y %H:%M")
         return Data
