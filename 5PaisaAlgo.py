@@ -2,8 +2,8 @@
 
 #!pip install py5paisa
 #!pip install pyotp
-from py5paisa import FivePaisaClient
 from py5paisa.order import OrderType, Exchange
+from py5paisa import FivePaisaClient
 import pyotp
 
 def login_to_5paisa(cred):
@@ -26,8 +26,8 @@ def login_to_5paisa(cred):
 #  login_to_Anjal   login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal   
 # !pip install smartapi-python
 # !pip install logzero
-from SmartApi import SmartConnect
 from SmartApi.smartWebSocketV2 import SmartWebSocketV2
+from SmartApi import SmartConnect
 import pyotp
 
 def login_to_Anjal(LoginData):
