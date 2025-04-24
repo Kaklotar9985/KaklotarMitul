@@ -1,5 +1,4 @@
 # login_to_5paisa  login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   
-
 #!pip install py5paisa
 #!pip install pyotp
 from py5paisa.order import OrderType, Exchange
