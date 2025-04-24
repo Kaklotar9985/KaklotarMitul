@@ -237,12 +237,13 @@ def fetch_Token(strike, name="NIFTY", exch_seg="NFO"):
         PE_Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(PEToken, case=False, na=False)]['symbol'].iloc[0]
         fetch_Candal_Data(CE_SymbolToken,CE_Symbol,CEstrike,"CE")
         fetch_Candal_Data(PE_SymbolToken,PE_Symbol,PEstrike,"PE")
+        return Candal_Data
     except Exception as e:
         print( "fetch_Token function Error : ", e )
 
 # # उदाहरण के लिए
 # fetch_Token(ATM_Strik)
-fetch_Token("24500")
+# fetch_Token("24500")
 # print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
 #________________________________________________________________________________________________________________________________________________________
 
