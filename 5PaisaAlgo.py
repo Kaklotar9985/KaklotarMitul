@@ -30,6 +30,7 @@ from SmartApi import SmartConnect
 import pyotp
 
 def login_to_Anjal(LoginData):
+    global smartApi , data , AUTH_TOKEN , refreshToken , FEED_TOKEN , res , sms
     try:
         smartApi = SmartConnect(api_key=LoginData["API_KEY"])
         session_data = smartApi.generateSession(LoginData["USERNAME"], LoginData["PWD"], pyotp.TOTP(LoginData["TOKEN"]).now())
@@ -44,9 +45,6 @@ def login_to_Anjal(LoginData):
     except Exception as e:
         print("❌ Anjal Login Failed:", str(e))
 #______________________________________________________________________________________________________________________________________________
-
-
-
 
 # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time
 from datetime import datetime, timedelta
@@ -128,3 +126,127 @@ def Run_fetch_Date_Time():
         print(Error)
 threading.Thread(target=Run_fetch_Date_Time).start()
 #________________________________________________________________________________________________________________________________________________________________
+
+# fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data  
+from datetime import datetime, timedelta
+import pandas as pd
+import requests
+def fetch_Scrip_Data():
+    global All_Scrip_Data
+    try:
+        url = 'https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json'
+        All_Scrip_Data = pd.DataFrame(requests.get(url).json())
+        return All_Scrip_Data
+    except Exception as e:
+        print(f"fetch_Scrip_Data Function Error: {e}")
+        return None
+All_Scrip_Data = fetch_Scrip_Data()
+#___________________________________________________________________________________________________________________________________________________________________________
+
+# fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data
+def fetch_Scrip_Data():
+    global Scrip_Data, All_Scrip_Data
+    try :
+        Scrip_Data_Exchange_filter = All_Scrip_Data[All_Scrip_Data['exch_seg'] == "NFO"]
+        Scrip_Data_Name_filter = Scrip_Data_Exchange_filter[Scrip_Data_Exchange_filter['name'] == "NIFTY"]
+        Scrip_Data_instrumenttype_filter = Scrip_Data_Name_filter[Scrip_Data_Name_filter['instrumenttype'] == "OPTIDX" ]
+        Scrip_Data = Scrip_Data_instrumenttype_filter
+        return Scrip_Data
+    except Exception as e:
+        print("fetch_Scrip_Data function Error : ", e )
+Scrip_Data = fetch_Scrip_Data()
+#________________________________________________________________________________________________________________________________________________________________________
+
+# fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate
+def fetch_ExpiryDate():
+    global Curnent_Expiry , Next_Expiry ,Expiry_List
+    try :
+        today = datetime.now().strftime('%d%b%Y')
+        Expiry_Data = sorted(Scrip_Data['expiry'].unique(), key=lambda x: datetime.strptime(x, '%d%b%Y'))
+        Expiry_List = [expiry for expiry in Expiry_Data if datetime.strptime(expiry, "%d%b%Y") >= datetime.strptime(today, "%d%b%Y")]
+        Curnent_Expiry = datetime.strptime(Expiry_List[0], '%d%b%Y').strftime('%d%b%y').upper()
+        Next_Expiry = datetime.strptime(Expiry_List[1], '%d%b%Y').strftime('%d%b%y').upper()
+    except Exception as e:   # त्रुटि संदेश और री-ट्राई लॉजिक
+        print( f"fetch_ExpiryDate function Error : ", e )
+fetch_ExpiryDate ()
+#_________________________________________________________________________________________________________________________________________________________________
+
+# Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken
+def Symbol_SymbolToken(Strike,Option_Type,Expiry = Next_Expiry, Index = "NIFTY"):
+    try:
+        Token = f"{Index}{Expiry}{Strike}{Option_Type}"
+        SymbolToken = Scrip_Data[Scrip_Data['symbol'].str.contains(Token, case=False, na=False)]['token'].iloc[0]
+        Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(Token, case=False, na=False)]['symbol'].iloc[0]
+        return Symbol , SymbolToken
+    except Exception as e: 
+        print( f"Symbol_SymbolToken function Error : ", e )
+# # उदाहरण के लिए
+# Symbol,SymbolToken = Symbol_SymbolToken("24200","CE", Expiry = Next_Expiry)
+# print(f"Symbol      : {Symbol}")
+# print(f"SymbolToken : {SymbolToken}")
+#______________________________________________________________________________________________________________________________________________________________________________
+
+# fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data
+Candal_Data = {}
+def fetch_Candal_Data(symboltoken, Symbol, StrikePrice, OP_tipe):
+    global Candle_Date, First_Candle_Time, Previous_Candal_Time
+
+    try:
+        if "09:20:00" <= live_time <= "15:31:00" :
+            historicParam = {"exchange": "NFO","symboltoken": symboltoken, "interval": "FIVE_MINUTE", "fromdate": f"{Candle_Date} 09:00", "todate": f"{Candle_Date} 15:30"}
+            response = smartApi.getCandleData(historicParam)
+            if response.get("data"):
+                DATA = pd.DataFrame(response["data"], columns=['Time', 'Open', 'High', 'Low', 'Close', 'Volume'])
+                DATA['Time'] = pd.to_datetime(DATA['Time'])
+                DATA['Date'] = DATA['Time'].dt.strftime('%d-%m-%Y')
+                DATA['Time'] = DATA['Time'].dt.strftime('%H:%M')
+
+                # 9:15 और पिछले कैंडल के क्लोज प्राइस निकालें  Close_PC
+                close_price = DATA.loc[DATA['Time'] == First_Candle_Time, 'Close']
+                previous_price = DATA.loc[DATA['Time'] == Previous_Candal_Time, 'Close']
+
+                Tred = None  # Initialize Tred
+                if not close_price.empty and not previous_price.empty:
+                    Close_915 = float(close_price.values[0])  # Ensure numeric
+                    Close_PC = float(previous_price.values[0])  # Ensure numeric
+                    Tred = "Yes" if Close_915 > Close_PC else None
+                else:
+                    Close_915 = None
+                    Close_PC = None
+
+                # डेटा अपडेट करें
+                Candal_Data[OP_tipe] = { "Symbol": Symbol, "Symboltoken": symboltoken, "StrikePrice": StrikePrice , "OP_tipe" : OP_tipe  , "Close_915": Close_915, "Close_PC": Close_PC,"Tred" : Tred }
+    except Exception as e:
+        print(f"fetch_Candal_Data function Error :", e)
+
+# # उदाहरण के लिए
+# fetch_Candal_Data(symboltoken,Symbol,StrikePrice,OP_tipe)
+# print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
+#__________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+# fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token
+def fetch_Token(strike, name="NIFTY", exch_seg="NFO"):
+    try :
+        CEstrike = strike
+        PEstrike = str(int(strike) + 50)
+        CEToken = f"{name}{Next_Expiry}{CEstrike}CE"
+        PEToken = f"{name}{Next_Expiry}{PEstrike}PE"
+        CE_SymbolToken = Scrip_Data[Scrip_Data['symbol'].str.contains(CEToken, case=False, na=False)]['token'].iloc[0]
+        CE_Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(CEToken, case=False, na=False)]['symbol'].iloc[0]
+        PE_SymbolToken = Scrip_Data[Scrip_Data['symbol'].str.contains(PEToken, case=False, na=False)]['token'].iloc[0]
+        PE_Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(PEToken, case=False, na=False)]['symbol'].iloc[0]
+        fetch_Candal_Data(CE_SymbolToken,CE_Symbol,CEstrike,"CE")
+        fetch_Candal_Data(PE_SymbolToken,PE_Symbol,PEstrike,"PE")
+    except Exception as e:
+        print( "fetch_Token function Error : ", e )
+
+# # उदाहरण के लिए
+# fetch_Token(ATM_Strik)
+fetch_Token("24500")
+# print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
+#________________________________________________________________________________________________________________________________________________________
+
+
+
+
+
