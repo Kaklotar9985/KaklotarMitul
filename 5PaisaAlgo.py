@@ -12,6 +12,8 @@ def login_to_5paisa(cred):
         client.set_access_token(access_token, cred["ClientCode"])
         if access_token :
            print("✅ Login Successful to 5Paisa for Client:", cred["ClientCode"])
+        else:
+           print("❌ Login Failed to 5Paisa for Client:", cred["ClientCode"])
         return client
     except Exception as e:
         print("❌ 5paisa Login Failed:", str(e))
