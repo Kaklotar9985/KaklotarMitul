@@ -215,7 +215,7 @@ def fetch_Candal_Data(symboltoken, Symbol, StrikePrice, OP_tipe):
                     Close_PC = None
 
                 # डेटा अपडेट करें
-                Candal_Data[OP_tipe] = { "Symbol": Symbol, "Symboltoken": symboltoken, "StrikePrice": StrikePrice , "OP_tipe" : OP_tipe  , "Close_915": Close_915, "Close_PC": Close_PC,"Tred" : Tred }
+                return { "Symbol": Symbol, "Symboltoken": symboltoken, "StrikePrice": StrikePrice , "OP_tipe" : OP_tipe  , "Close_915": Close_915, "Close_PC": Close_PC,"Tred" : Tred }
     except Exception as e:
         print(f"fetch_Candal_Data function Error :", e)
 
@@ -235,8 +235,9 @@ def fetch_Token(strike, name="NIFTY", exch_seg="NFO"):
         CE_Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(CEToken, case=False, na=False)]['symbol'].iloc[0]
         PE_SymbolToken = Scrip_Data[Scrip_Data['symbol'].str.contains(PEToken, case=False, na=False)]['token'].iloc[0]
         PE_Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(PEToken, case=False, na=False)]['symbol'].iloc[0]
-        fetch_Candal_Data(CE_SymbolToken,CE_Symbol,CEstrike,"CE")
-        fetch_Candal_Data(PE_SymbolToken,PE_Symbol,PEstrike,"PE")
+        Call = fetch_Candal_Data(CE_SymbolToken,CE_Symbol,CEstrike,"CE")
+        Put  = fetch_Candal_Data(PE_SymbolToken,PE_Symbol,PEstrike,"PE")
+        Candal_Data = { "CE" : Call , "PE" : Put }
         return Candal_Data
     except Exception as e:
         print( "fetch_Token function Error : ", e )
