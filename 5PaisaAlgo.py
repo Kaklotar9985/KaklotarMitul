@@ -22,7 +22,7 @@ def login_to_5paisa(cred):
         print("❌ 5paisa Login Failed:", str(e))
         return None
 #____________________________________________________________________________________________________________________________________________________________________________________
-
+'''
 #  login_to_Anjal   login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal   
 # !pip install smartapi-python
 # !pip install logzero
@@ -45,8 +45,10 @@ def login_to_Anjal(LoginData):
     except Exception as e:
         print("❌ Anjal Login Failed:", str(e))
 #______________________________________________________________________________________________________________________________________________
+'''
 
 # feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket
+
 feedjson    = {}
 ATM_Strik   = None
 Nifty_LTP   = None
@@ -86,5 +88,25 @@ def on_close(wsapp):
 def close_connection():
     sws.close_connection()
     print("Anjal_WebSoket : Connection closed manually.")
+
+def login_to_Anjal(LoginData):
+    try:
+        smartApi = SmartConnect(api_key=LoginData["API_KEY"])
+        session_data = smartApi.generateSession(LoginData["USERNAME"], LoginData["PWD"], pyotp.TOTP(LoginData["TOKEN"]).now())
+        AUTH_TOKEN = session_data['data']['jwtToken']
+        refreshToken = session_data['data']['refreshToken']
+        FEED_TOKEN = smartApi.getfeedToken()
+        profile = smartApi.getProfile(refreshToken)
+        sws = SmartWebSocketV2(AUTH_TOKEN, LoginData["API_KEY"], LoginData["USERNAME"], FEED_TOKEN)
+        print("✅ Login Successful to Anjal :", profile['data']['name'])
+        sws.on_open  = on_open
+        sws.on_data  = on_data
+        sws.on_error = on_error
+        sws.on_close = on_close
+        threading.Thread(target=sws.connect).start()
+        return smartApi, AUTH_TOKEN, refreshToken, FEED_TOKEN, sws
+        # return { 'smartApi': smartApi, 'auth_token': AUTH_TOKEN, 'refresh_token': refreshToken, 'feed_token': FEED_TOKEN, 'websocket': sws }
+    except Exception as e:
+        print("❌ Anjal Login Failed:", str(e))
 
 # ____________________________________________________________________________________________________________________________________________________
