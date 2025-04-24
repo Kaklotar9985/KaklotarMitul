@@ -39,7 +39,7 @@ def login_to_Anjal(LoginData):
         FEED_TOKEN = smartApi.getfeedToken()
         profile = smartApi.getProfile(refreshToken)
         sws = SmartWebSocketV2(AUTH_TOKEN, LoginData["API_KEY"], LoginData["USERNAME"], FEED_TOKEN)
-        print("✅ Login Successful to Anjal:", profile['data']['name'])
+        print("✅ Login Successful to Anjal :", profile['data']['name'])
         return smartApi, AUTH_TOKEN, refreshToken, FEED_TOKEN, sws
         # return { 'smartApi': smartApi, 'auth_token': AUTH_TOKEN, 'refresh_token': refreshToken, 'feed_token': FEED_TOKEN, 'websocket': sws }
     except Exception as e:
