@@ -48,6 +48,9 @@ def login_to_Anjal(LoginData):
 '''
 
 # feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket
+from SmartApi import SmartConnect
+from SmartApi.smartWebSocketV2 import SmartWebSocketV2
+import pyotp
 
 feedjson    = {}
 ATM_Strik   = None
