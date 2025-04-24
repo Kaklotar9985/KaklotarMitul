@@ -47,30 +47,59 @@ def login_to_Anjal(LoginData):
 #______________________________________________________________________________________________________________________________________________
 
 # feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket
-feedjson    = {}
-ATM_Strik   = None
-Nifty_LTP   = None
+feedjson = {}
+ATM_Strik = None
+Nifty_LTP = None
 WebSoket_Status = None
 
 def on_data(wsapp, message):
-    global feedjson
-    global ATM_Strik
-    global Nifty_LTP
-    token =  message.get("token")
-    last_traded_price = (message.get("last_traded_price"))/100
-    Bid_price = (max(item['price'] for item in (message["best_5_buy_data"])))/100
-    Ask_price = (min(item['price'] for item in (message["best_5_sell_data"])))/100
-    if  token is not None and last_traded_price is not None and Bid_price is not None and Ask_price is not None:
-        feedjson[token] = {"token": token,"last_traded_price": last_traded_price,"Bid_price": Bid_price,"Ask_price": Ask_price}
-        Nifty_LTP=feedjson["26000"]["last_traded_price"]
-        ATM_Strik = round(Nifty_LTP / 50) * 50
+    global feedjson, ATM_Strik, Nifty_LTP
+    try:
+        # Convert token to string for consistent key matching
+        token = str(message.get("token"))
+        
+        # Extract market data (handle division by zero)
+        last_traded_price = (message.get("last_traded_price") or 0) / 100
+        
+        # Handle empty bid/ask data gracefully
+        buy_data = message.get("best_5_buy_data", [{}])
+        sell_data = message.get("best_5_sell_data", [{}])
+        
+        Bid_price = (max(item.get('price', 0) for item in buy_data) or 0
+        Ask_price = (min(item.get('price', 0) for item in sell_data)) or 0
+        
+        # Update feed dictionary
+        feedjson[token] = {
+            "token": token,
+            "last_traded_price": last_traded_price,
+            "Bid_price": Bid_price,
+            "Ask_price": Ask_price
+        }
+        
+        # Update Nifty LTP only for token 26000
+        if token == "26000":  # Match string token
+            Nifty_LTP = last_traded_price
+            ATM_Strik = round(Nifty_LTP / 50) * 50
+            
+    except Exception as e:
+        print(f"WebSocket Data Error: {str(e)}")
 
 def on_open(wsapp):
     global WebSoket_Status
-    print("Anjal_WebSoket : Open")
+    print("Anjal_WebSocket: Connected")
     WebSoket_Status = "Open"
-    token_list = [{"exchangeType": 1, "tokens": ["26000"]}]
-    sws.subscribe("abc123", 3, token_list)
+    
+    # Subscribe to Nifty 50 index (token 26000)
+    token_list = [{
+        "exchangeType": 1,      # NSE
+        "tokens": ["26000"]    # Use string token
+    }]
+    
+    # Start subscription
+    try:
+        sws.subscribe("nifty_feed", 3, token_list)  # Mode 3 for LTP
+    except Exception as e:
+        print(f"Subscription Error: {str(e)}")
 
 def on_error(wsapp, error):
     global WebSoket_Status
