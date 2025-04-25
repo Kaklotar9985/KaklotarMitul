@@ -131,7 +131,7 @@ threading.Thread(target=Run_fetch_Date_Time).start()
 from datetime import datetime, timedelta
 import pandas as pd
 import requests
-def fetch_Scrip_Data():
+def fetch_All_Scrip_Data():
     global All_Scrip_Data
     try:
         url = 'https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json'
@@ -140,7 +140,7 @@ def fetch_Scrip_Data():
     except Exception as e:
         print(f"fetch_Scrip_Data Function Error: {e}")
         return None
-All_Scrip_Data = fetch_Scrip_Data()
+All_Scrip_Data = fetch_All_Scrip_Data()
 #___________________________________________________________________________________________________________________________________________________________________________
 
 # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data
