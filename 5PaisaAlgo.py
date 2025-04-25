@@ -127,7 +127,7 @@ def Run_fetch_Date_Time():
 threading.Thread(target=Run_fetch_Date_Time).start()
 #________________________________________________________________________________________________________________________________________________________________
 
-# fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data  
+# fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data   fetch_Scrip_Data
 from datetime import datetime, timedelta
 import pandas as pd
 import requests
@@ -144,8 +144,7 @@ All_Scrip_Data = fetch_Scrip_Data()
 #___________________________________________________________________________________________________________________________________________________________________________
 
 # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data # fetch_Scrip_Data
-def fetch_Scrip_Data():
-    global Scrip_Data, All_Scrip_Data
+def fetch_Scrip_Data(All_Scrip_Data):
     try :
         Scrip_Data_Exchange_filter = All_Scrip_Data[All_Scrip_Data['exch_seg'] == "NFO"]
         Scrip_Data_Name_filter = Scrip_Data_Exchange_filter[Scrip_Data_Exchange_filter['name'] == "NIFTY"]
@@ -154,40 +153,40 @@ def fetch_Scrip_Data():
         return Scrip_Data
     except Exception as e:
         print("fetch_Scrip_Data function Error : ", e )
-Scrip_Data = fetch_Scrip_Data()
+Scrip_Data = fetch_Scrip_Data(All_Scrip_Data)
 #________________________________________________________________________________________________________________________________________________________________________
 
 # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate  # fetch_ExpiryDate
-def fetch_ExpiryDate():
-    global Curnent_Expiry , Next_Expiry ,Expiry_List
+def fetch_ExpiryDate(Scrip_Data):
     try :
         today = datetime.now().strftime('%d%b%Y')
         Expiry_Data = sorted(Scrip_Data['expiry'].unique(), key=lambda x: datetime.strptime(x, '%d%b%Y'))
         Expiry_List = [expiry for expiry in Expiry_Data if datetime.strptime(expiry, "%d%b%Y") >= datetime.strptime(today, "%d%b%Y")]
         Curnent_Expiry = datetime.strptime(Expiry_List[0], '%d%b%Y').strftime('%d%b%y').upper()
         Next_Expiry = datetime.strptime(Expiry_List[1], '%d%b%Y').strftime('%d%b%y').upper()
+        return Curnent_Expiry , Next_Expiry ,Expiry_List
     except Exception as e:   # त्रुटि संदेश और री-ट्राई लॉजिक
         print( f"fetch_ExpiryDate function Error : ", e )
-fetch_ExpiryDate ()
+Curnent_Expiry, Next_Expiry, Expiry_List  = fetch_ExpiryDate (Scrip_Data)
 #_________________________________________________________________________________________________________________________________________________________________
 
 # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken  # Symbol_SymbolToken
-def Symbol_SymbolToken(Strike,Option_Type,Expiry = Next_Expiry, Index = "NIFTY"):
+def Symbol_SymbolToken(Scrip_Data, Strike ,Option_Type, Expiry = Next_Expiry, Index = "NIFTY"):
     try:
         Token = f"{Index}{Expiry}{Strike}{Option_Type}"
         SymbolToken = Scrip_Data[Scrip_Data['symbol'].str.contains(Token, case=False, na=False)]['token'].iloc[0]
         Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(Token, case=False, na=False)]['symbol'].iloc[0]
         return Symbol , SymbolToken
-    except Exception as e: 
+    except Exception as e:
         print( f"Symbol_SymbolToken function Error : ", e )
 # # उदाहरण के लिए
-# Symbol,SymbolToken = Symbol_SymbolToken("24200","CE", Expiry = Next_Expiry)
+# Symbol,SymbolToken = Symbol_SymbolToken( Scrip_Data, "24200", "CE", Expiry = Next_Expiry)
 # print(f"Symbol      : {Symbol}")
 # print(f"SymbolToken : {SymbolToken}")
 #______________________________________________________________________________________________________________________________________________________________________________
 
 # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data
-Candal_Data = {}
+# Candal_Data = {}
 def fetch_Candal_Data(symboltoken, Symbol, StrikePrice, OP_tipe):
     global Candle_Date, First_Candle_Time, Previous_Candal_Time
 
@@ -225,7 +224,7 @@ def fetch_Candal_Data(symboltoken, Symbol, StrikePrice, OP_tipe):
 #__________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token
-def fetch_Token(strike, name="NIFTY", exch_seg="NFO"):
+def fetch_Token(Scrip_Data, strike, name="NIFTY", exch_seg="NFO"):
     try :
         CEstrike = strike
         PEstrike = str(int(strike) + 50)
@@ -243,11 +242,11 @@ def fetch_Token(strike, name="NIFTY", exch_seg="NFO"):
         print( "fetch_Token function Error : ", e )
 
 # # उदाहरण के लिए
-# fetch_Token(ATM_Strik)
+Candal_Data = fetch_Token(Scrip_Data,ATM_Strik)
+print(Candal_Data)
 # fetch_Token("24500")
 # print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
 #________________________________________________________________________________________________________________________________________________________
-
 
 
 
