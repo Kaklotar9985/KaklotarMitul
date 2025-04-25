@@ -187,7 +187,7 @@ def Symbol_SymbolToken(Scrip_Data, Strike ,Option_Type, Expiry = Next_Expiry, In
 
 # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data
 # Candal_Data = {}
-def fetch_Candal_Data(symboltoken, Symbol, StrikePrice, OP_tipe):
+def fetch_Candal_Data(symboltoken, Symbol, StrikePrice, OP_tipe, smartApi):
     global Candle_Date, First_Candle_Time, Previous_Candal_Time
 
     try:
@@ -224,7 +224,7 @@ def fetch_Candal_Data(symboltoken, Symbol, StrikePrice, OP_tipe):
 #__________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token  # fetch_Token
-def fetch_Token(Scrip_Data, strike, name="NIFTY", exch_seg="NFO"):
+def fetch_Token(smartApi, Scrip_Data, strike, name="NIFTY", exch_seg="NFO"):
     try :
         CEstrike = strike
         PEstrike = str(int(strike) + 50)
@@ -234,15 +234,15 @@ def fetch_Token(Scrip_Data, strike, name="NIFTY", exch_seg="NFO"):
         CE_Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(CEToken, case=False, na=False)]['symbol'].iloc[0]
         PE_SymbolToken = Scrip_Data[Scrip_Data['symbol'].str.contains(PEToken, case=False, na=False)]['token'].iloc[0]
         PE_Symbol = Scrip_Data[Scrip_Data['symbol'].str.contains(PEToken, case=False, na=False)]['symbol'].iloc[0]
-        Call = fetch_Candal_Data(CE_SymbolToken,CE_Symbol,CEstrike,"CE")
-        Put  = fetch_Candal_Data(PE_SymbolToken,PE_Symbol,PEstrike,"PE")
+        Call = fetch_Candal_Data(CE_SymbolToken,CE_Symbol,CEstrike,"CE", smartApi)
+        Put  = fetch_Candal_Data(PE_SymbolToken,PE_Symbol,PEstrike,"PE", smartApi)
         Candal_Data = { "CE" : Call , "PE" : Put }
         return Candal_Data
     except Exception as e:
         print( "fetch_Token function Error : ", e )
 
 # # उदाहरण के लिए
-# Candal_Data = fetch_Token(Scrip_Data,ATM_Strik)
+# Candal_Data = fetch_Token(smartApi, Scrip_Data, ATM_Strik)
 # print(Candal_Data)
 # fetch_Token("24500")
 # print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
