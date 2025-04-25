@@ -242,8 +242,8 @@ def fetch_Token(Scrip_Data, strike, name="NIFTY", exch_seg="NFO"):
         print( "fetch_Token function Error : ", e )
 
 # # उदाहरण के लिए
-Candal_Data = fetch_Token(Scrip_Data,ATM_Strik)
-print(Candal_Data)
+# Candal_Data = fetch_Token(Scrip_Data,ATM_Strik)
+# print(Candal_Data)
 # fetch_Token("24500")
 # print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
 #________________________________________________________________________________________________________________________________________________________
