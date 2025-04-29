@@ -527,5 +527,48 @@ def cancel_order(order_id,trading_symbol, client):
 # ok Order Response: {'result': '250120000480289', 'stat': 'Ok', 'stCode': 200}
 #__________________________________________________________________________________________________________________________
 
+# fetch_OrderBook   fetch_OrderBook   fetch_OrderBook   fetch_OrderBook   fetch_OrderBook   fetch_OrderBook   fetch_OrderBook   fetch_OrderBook
+def fetch_OrderBook(client):
+    try:
+        live_time = get_live_datetime("live_time")
+        if "09:20:00" <= live_time <= "23:59:00":
+            # Direct API call and check
+            ob_response = client.order_report()
+            if ob_response.get("stat") == "Ok":
+                df = pd.DataFrame(ob_response["data"])
+                columns_needed = [ "nOrdNo", "ordSt", "expDt", "stkPrc", "optTp", "trdSym", "trnsTp", "prcTp", "qty", "cnlQty","fldQty", "trgPrc", "prc", "avgPrc", "ordDtTm" ]
+                return df[columns_needed]
+    except Exception as e:
+        print( "fetch_OrderBook function Error :", e )
+
+# Order_Book = fetch_OrderBook(kotak_client)
+# print(Order_Book)
+#_________________________________________________________________________________________________________________________________________________________________
+# Order_Status  Order_Status  Order_Status  Order_Status  Order_Status  Order_Status  Order_Status  Order_Status
+import json
+def Order_Status(order_id, client):
+    try:
+        order_book = fetch_OrderBook(client)
+        if order_book is None or order_book.empty:
+            msg = f"Order_id : {order_id}, OrderBook Empty or None"
+            Telegram_Message(msg)
+            return None
+
+        # Check if order_id exists directly
+        match = order_book.loc[order_book["nOrdNo"] == order_id]
+        if match.empty:
+            msg = f"Order_id : {order_id}, Information Not Available"
+            Telegram_Message(msg)
+            return None
+        else:
+            return match.iloc[0].to_dict()  # Faster than converting to JSON
+    except Exception as e:
+        print("Order_Status function Error:", e)
+        return None
+# order_id = "250429000829748"
+# Status = Order_Status(order_id, kotak_client)
+# print(Status)
+#_________________________________________________________________________________________________________________________________________________________________________
+
 
 
