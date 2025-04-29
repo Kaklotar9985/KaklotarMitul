@@ -262,6 +262,64 @@ def fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, last_trading_da
 # print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
 #______________________________________________________________________________________________________________________________________________________________________________
 
+CE_Detail = {"CE_Tred"  : None,
+             "CE_Detail":{"CE_SELL_orderid": None, "CE_Entry_Time"  : None, "CE_SL_orderid"  : None, "CE_SL_orderDate": None, "CE_Symbol"      : None,
+                          "CE_Symboltoken" : None, "CE_StrikePrice" : None, "CE_Close_915"   : None, "CE_Close_PC"    : None, "CE_Sell_Qty"    : None,
+                          "CE_Sell_Price"  : None, "CE_Top_Loss"    : None, "CE_TSL_1"       : None, "CE_TSL_2"       : None, "CE_Target"      : None,
+                          "CE_Exit_Price"  : None, "CE_Exit_Time"   : None, "CE_Exit_Type"   : None, "CE_Exit_Trigger": None, "CE_LTP"         : None }}
+
+PE_Detail = {"PE_Tred"  : None,
+             "PE_Detail":{"PE_SELL_orderid": None, "PE_Entry_Time"  : None, "PE_SL_orderid"  : None, "PE_SL_orderDate": None,  "PE_Symbol"      : None,
+                          "PE_Symboltoken" : None, "PE_StrikePrice" : None, "PE_Close_915"   : None, "PE_Close_PC"    : None,  "PE_Sell_Qty"    : None,
+                          "PE_Sell_Price"  : None, "PE_Top_Loss"    : None, "PE_TSL_1"       : None, "PE_TSL_2"       : None,  "PE_Target"      : None,
+                          "PE_Exit_Price"  : None, "PE_Exit_Time"   : None, "PE_Exit_Type"   : None, "PE_Exit_Trigger": None,  "PE_LTP"         : None }}
+Tred_Detail = { "CALL_List": [], "PUT_List": [] }
+
+# Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable
+def Read_Variable(target_dict, key1, key2=None):
+    try:
+        if key2 is None:
+            return target_dict.get(key1)
+        return target_dict.get(key1, {}).get(key2)
+    except Exception as e:
+        print(f"Read_Variable function Error:", e)
+# Example usage
+# json_path = CE_Detail
+# Variable_Name = "PE_Detail"
+# Variable_Name2 = "PE_SELL_orderid"
+# result = Read_Variable(json_path, Variable_Name, Variable_Name2)
+# print(result)
+#_________________________________________________________________________________________________________________________________________________________________________
+
+# update_variable  update_variable  update_variable  update_variable  update_variable  update_variable  update_variable  update_variable  update_variable  update_variable
+def update_variable(target_dict, value, key1, key2=None):
+    try:
+        if key2 is None:
+            target_dict[key1] = value
+        else:
+            nested = target_dict.get(key1)
+            if nested is not None:
+               nested[key2] = value
+    except Exception as e:
+        print(f"update_variable function Error: {e}")
+# Example usage
+# update_variable(PE_Detail, 100, "PE_Detail","PE_LTP")
+# print(CE_Detail)
+# print(PE_Detail)
+#_________________________________________________________________________________________________________________________________________________________________________
+
+# Tred_Detail_Update # Tred_Detail_Update # Tred_Detail_Update # Tred_Detail_Update # Tred_Detail_Update # Tred_Detail_Update # Tred_Detail_Update # Tred_Detail_Update
+def Tred_Detail_Update(target_dict, new_data, list_name):
+    try:
+        target_dict.setdefault(list_name, []).append(new_data)
+    except Exception as e:
+        print(f"Tred_Detail_Update function Error: {e}")
+
+# # उदाहरण के लिए
+# target_dict = Read_Variable(PE_Detail,"PE_Detail",None)
+# Tred_Detail_Update(Tred_Detail,target_dict, "PUT_List")
+# print(Tred_Detail)
+# ________________________________________________________________________________________________________________________________________________________________________________
 
 
 
