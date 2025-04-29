@@ -14,7 +14,8 @@ def Telegram_Message(*args):
       print("Message sent successfully!")
     except Exception as e:
         print( f"Telegram_Message function Error :", e )
-Telegram_Message("HI")
+# Example usage
+# Telegram_Message("HI")
 #_____________________________________________________________________________________________________________________________________________________
 
 # login_to_5paisa  login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   
