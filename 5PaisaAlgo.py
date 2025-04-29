@@ -1,9 +1,3 @@
-!pip install py5paisa
-!pip install pyotp
-!pip install smartapi-python
-!pip install logzero
-!pip install telebot
-
 # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message
 # !pip install telebot
 import telebot
