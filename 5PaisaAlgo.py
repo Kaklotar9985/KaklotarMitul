@@ -344,6 +344,41 @@ def Tred_Detail_Update(target_dict, new_data, list_name):
 # print(Tred_Detail)
 # ________________________________________________________________________________________________________________________________________________________________________________
 
+# fetch_Kotak_Symbol  fetch_Kotak_Symbol  fetch_Kotak_Symbol  fetch_Kotak_Symbol  fetch_Kotak_Symbol  fetch_Kotak_Symbol  fetch_Kotak_Symbol  fetch_Kotak_Symbol  fetch_Kotak_Symbol
+from datetime import datetime, timedelta
+import pandas as pd
+
+def fetch_Kotak_scrip_data(client):
+    try:
+        url = client.scrip_master(exchange_segment="NFO")
+        usecols = ['pSymbolName', 'pInstType', 'pExchSeg', 'pSymbol', 'pTrdSymbol','pOptionType', 'pExpiryDate', 'dStrikePrice;']
+        scrip_data = pd.read_csv(url, usecols=usecols)
+        scrip_data = scrip_data.query("(pSymbolName == 'NIFTY') and (pInstType == 'OPTIDX') and (pExchSeg == 'nse_fo')").copy()
+        scrip_data.loc[:, 'pExpiryDate'] = pd.to_datetime(scrip_data['pExpiryDate'], unit='s', errors='coerce')
+        scrip_data.loc[:, 'pExpiryDate'] = scrip_data['pExpiryDate'] + pd.DateOffset(years=10) - timedelta(days=1)
+        scrip_data.loc[:, 'ExpiryDates'] = scrip_data['pExpiryDate'].dt.strftime('%d%b%y')
+        scrip_data.loc[:, 'StrikePrice'] = (scrip_data['dStrikePrice;'] / 100).astype('int32')
+        scrip_data.rename(columns={ 'pSymbol': 'Tokens', 'pTrdSymbol': 'Symbol', 'pOptionType': 'OptionType' }, inplace=True)
+        return dict(zip(scrip_data['Tokens'].astype(str), scrip_data['Symbol']))
+        # return scrip_data[['Tokens', 'Symbol', 'OptionType', 'StrikePrice', 'ExpiryDates']]
+        dict(zip(Kotak_Scrip_Data['Tokens'].astype(str), Kotak_Scrip_Data['Symbol']))
+    except Exception as e:
+        print("fetch_scrip_data function Error:", e)
+        return pd.DataFrame()
+# Example usage
+# Kotak_Scrip_Data = fetch_Kotak_scrip_data(kotak_client)
+
+def fetch_Kotak_Symbol(Tokens,Kotak_scrip_data):
+    try :
+        Tokens_Symbol  = Kotak_scrip_data[(Kotak_scrip_data['Tokens'] == Tokens) ]
+        Symbol = Tokens_Symbol["Symbol"].iloc[0]
+        return Symbol
+    except Exception as e: 
+        print("fetch_Tokens_Symbol function Error :", e )
+# Example usage
+# Kotak_Symbol = fetch_Kotak_Symbol("38604", Kotak_Scrip_Data)
+# print(Kotak_Symbol)
+#______________________________________________________________________________________________________________________________________________________
 
 
 
