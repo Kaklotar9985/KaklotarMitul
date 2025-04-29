@@ -262,18 +262,26 @@ def fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, last_trading_da
 # print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
 #______________________________________________________________________________________________________________________________________________________________________________
 
-CE_Detail = {"CE_Tred"  : None,
-             "CE_Detail":{"CE_SELL_orderid": None, "CE_Entry_Time"  : None, "CE_SL_orderid"  : None, "CE_SL_orderDate": None, "CE_Symbol"      : None,
-                          "CE_Symboltoken" : None, "CE_StrikePrice" : None, "CE_Close_915"   : None, "CE_Close_PC"    : None, "CE_Sell_Qty"    : None,
-                          "CE_Sell_Price"  : None, "CE_Top_Loss"    : None, "CE_TSL_1"       : None, "CE_TSL_2"       : None, "CE_Target"      : None,
-                          "CE_Exit_Price"  : None, "CE_Exit_Time"   : None, "CE_Exit_Type"   : None, "CE_Exit_Trigger": None, "CE_LTP"         : None }}
-
-PE_Detail = {"PE_Tred"  : None,
-             "PE_Detail":{"PE_SELL_orderid": None, "PE_Entry_Time"  : None, "PE_SL_orderid"  : None, "PE_SL_orderDate": None,  "PE_Symbol"      : None,
-                          "PE_Symboltoken" : None, "PE_StrikePrice" : None, "PE_Close_915"   : None, "PE_Close_PC"    : None,  "PE_Sell_Qty"    : None,
-                          "PE_Sell_Price"  : None, "PE_Top_Loss"    : None, "PE_TSL_1"       : None, "PE_TSL_2"       : None,  "PE_Target"      : None,
-                          "PE_Exit_Price"  : None, "PE_Exit_Time"   : None, "PE_Exit_Type"   : None, "PE_Exit_Trigger": None,  "PE_LTP"         : None }}
-Tred_Detail = { "CALL_List": [], "PUT_List": [] }
+# get_Variable_DataNone get_Variable_DataNone get_Variable_DataNone get_Variable_DataNone get_Variable_DataNone get_Variable_DataNone 
+def get_Variable_DataNone(Variable_Name):
+    try:
+        if Variable_Name == "CE_Detail":
+          return    {"CE_Tred"  : None,
+                      "CE_Detail":{"CE_SELL_orderid": None, "CE_Entry_Time"  : None, "CE_SL_orderid"  : None, "CE_SL_orderDate": None, "CE_Symbol"      : None,
+                                    "CE_Symboltoken" : None, "CE_StrikePrice" : None, "CE_Close_915"   : None, "CE_Close_PC"    : None, "CE_Sell_Qty"    : None,
+                                    "CE_Sell_Price"  : None, "CE_Top_Loss"    : None, "CE_TSL_1"       : None, "CE_TSL_2"       : None, "CE_Target"      : None,
+                                    "CE_Exit_Price"  : None, "CE_Exit_Time"   : None, "CE_Exit_Type"   : None, "CE_Exit_Trigger": None, "CE_LTP"         : None }}
+        if Variable_Name == "PE_Detail":
+          return    {"PE_Tred"  : None,
+                      "PE_Detail":{"PE_SELL_orderid": None, "PE_Entry_Time"  : None, "PE_SL_orderid"  : None, "PE_SL_orderDate": None,  "PE_Symbol"      : None,
+                                    "PE_Symboltoken" : None, "PE_StrikePrice" : None, "PE_Close_915"   : None, "PE_Close_PC"    : None,  "PE_Sell_Qty"    : None,
+                                    "PE_Sell_Price"  : None, "PE_Top_Loss"    : None, "PE_TSL_1"       : None, "PE_TSL_2"       : None,  "PE_Target"      : None,
+                                    "PE_Exit_Price"  : None, "PE_Exit_Time"   : None, "PE_Exit_Type"   : None, "PE_Exit_Trigger": None,  "PE_LTP"         : None }}
+        if Variable_Name == "Tred_Detail":
+          return    { "CALL_List": [], "PUT_List": [] }
+    except Exception as e:
+        print(f"get_Variable_DataNone function Error: {e}")
+# ________________________________________________________________________________________________________________________________________________________________________________
 
 # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable  # Read_Variable
 def Read_Variable(target_dict, key1, key2=None):
