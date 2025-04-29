@@ -1,3 +1,28 @@
+!pip install py5paisa
+!pip install pyotp
+!pip install smartapi-python
+!pip install logzero
+!pip install telebot
+
+# Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message
+# !pip install telebot
+import telebot
+def Telegram_Message(*args):
+    BOT_TOKEN = '7591009372:AAEkZFnOZ1UyqxQgiTSJVqKqr1uvPP5KqPI'
+    Tel_Candal_Data_ID  = "-1002257377003"
+    Tel_JB_Sons_ID      = "-1002263632329"
+    Tel_Jay_Mataji_ID   = '1170793375'
+    CHAT_ID = Tel_Jay_Mataji_ID
+    try:
+      bot = telebot.TeleBot(BOT_TOKEN)
+      message = "\n".join(filter(None, args))
+      bot.send_message(CHAT_ID, message)
+      print("Message sent successfully!")
+    except Exception as e:
+        print( f"Telegram_Message function Error :", e )
+Telegram_Message("HI")
+#_____________________________________________________________________________________________________________________________________________________
+
 # login_to_5paisa  login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   
 #!pip install py5paisa
 #!pip install pyotp
