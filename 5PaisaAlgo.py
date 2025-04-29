@@ -377,5 +377,155 @@ def fetch_Kotak_Symbol(Tokens, Kotak_scrip_data):
 # print(Kotak_Symbol)
 #______________________________________________________________________________________________________________________________________________________
 
+# place_order  place_order  place_order  place_order  place_order  place_order  place_order  place_order  place_order  place_order  place_order
+def place_order(trading_symbol, quantity, trigger_price, transaction_type, order_type, client):
+    try:
+        trigger_price = float(trigger_price)         # Ensure trigger_price is treated as a float
+        if order_type == "SL":  # Stop Loss order
+            if transaction_type == "S":
+                price = trigger_price - 0.50
+            elif transaction_type == "B":
+                price = trigger_price + 0.50
+        elif order_type == "MKT":  # Market order
+            price = 0
+            trigger_price = 0
+        elif order_type == "L":  # Limit order
+            price = trigger_price
+            trigger_price = 0
+        elif order_type == "SL-M":  # Stop Loss Market order
+            price = 0
+
+        # API call to place the order
+        response  = client.place_order( trading_symbol=str(trading_symbol) , price=str(price), quantity=str(quantity),order_type=str(order_type),
+                                transaction_type=transaction_type, trigger_price=str(trigger_price),exchange_segment="nse_fo",
+                                product="NRML", validity="DAY",amo="NO", disclosed_quantity="0", market_protection="0", pf="N", tag=None)
+
+        if response is not None:
+            if response.get("stat") == "Ok" and response.get("stCode") == 200:
+                msg = f"Order Placed successfully: {trading_symbol}"
+                Telegram_Message(msg)
+            elif response.get("stat") == "Not_Ok":
+                msg1 = f"Order Placed Error : {trading_symbol}"
+                msg2 = response.get("errMsg") or None
+                Telegram_Message(msg1, msg2)
+            else:
+                msg1 = f"Order Placed Error : {trading_symbol}"
+                msg2 = json.dumps(response, indent=2)
+                Telegram_Message(msg1,msg2)
+        else:
+            msg = f"Order placed Error No response received: {trading_symbol}"
+            Telegram_Message(msg)
+
+        # Print and return response
+        print(f"Order placed {trading_symbol} Response : ", response )
+        return response
+
+    except Exception as e:
+        msg1 = f"Order Placed Error: {trading_symbol}"
+        print(msg1,e)
+        Telegram_Message(msg1,str(e))
+
+
+# trading_symbol = "NIFTY25JAN23200CE"
+# quantity = "75"
+# Trigger_Price = 300
+# transaction_type = "B"
+# order_type = "SL"
+# response = place_order(trading_symbol,quantity,Trigger_Price,transaction_type,order_type)
+# Error Order Response: {'stCode': 5021, 'errMsg': 'Market is closed, do you want to place an AMO order', 'stat': 'Not_Ok'}
+# ok Order Response   : {'nOrdNo': '250120000337756', 'stat': 'Ok', 'stCode': 200}
+#________________________________________________________________________________________________________________________________________________
+
+# modify_order  odify_order  odify_order  odify_order  odify_order  odify_order  odify_order  odify_order  odify_order  odify_order
+def modify_order(order_id, trading_symbol, quantity, trigger_price, transaction_type, order_type, client):
+    try:
+        quantity = int(quantity)
+        trigger_price = float(trigger_price)
+        if order_type == "SL":  # Stop Loss order
+            if transaction_type == "S":
+                price = trigger_price - 0.50
+            elif transaction_type == "B":
+                price = trigger_price + 0.50
+        elif order_type == "L":  # Limit order
+            price = trigger_price
+            trigger_price = 0
+        elif order_type == "MKT":  # Market order
+            price = 0
+            trigger_price = 0
+
+        response  = client.modify_order(order_id = order_id, trigger_price = str(trigger_price),price = str(price),
+                        quantity = str(quantity), order_type = order_type, disclosed_quantity = "0", validity = "DAY" )
+
+        if response is not None:
+            if response.get("stat") == "Ok" and response.get("stCode") == 200:
+                msg = f"Modify Order successfully: {trading_symbol}"
+                Telegram_Message(msg)
+            elif response.get("stat") == "Not_Ok":
+                msg1 = f"Modify Order Error : {trading_symbol}"
+                msg2 = response.get("errMsg") or None
+                Telegram_Message(msg1, msg2)
+            else:
+                msg1 = f"Modify Order Error : {trading_symbol}"
+                msg2 = json.dumps(response, indent=2)
+                Telegram_Message(msg1,msg2)
+        else:
+            msg = f"Modify Order Error No response received: {trading_symbol}"
+            Telegram_Message(msg)
+
+        print("Order Response:", response )
+        return response
+
+    except Exception as e:
+        msg1 = f"Modify Order Error : {trading_symbol}"
+        print(msg1,e)
+        Telegram_Message(msg1,str(e))
+
+
+# trading_symbol = "NIFTY25JAN23200CE"
+# order_id = "250119000000715"
+# quantity = 75
+# trigger_price = 1
+# transaction_type = "B"
+# order_type = "L"
+# response = modify_order(order_id, trading_symbol, quantity, trigger_price, transaction_type, order_type)
+# print(response)
+# ok Error Order Response: {'nOrdNo': '250119000000715', 'stat': 'Ok', 'stCode': 200}  order_detail
+#______________________________________________________________________________________________________________________________________
+
+# cancel_order   cancel_order   cancel_order   cancel_order   cancel_order   cancel_order   cancel_order   cancel_order
+def cancel_order(order_id,trading_symbol, client):
+    try:
+        response  = client.cancel_order( order_id = order_id )
+        if response is not None:
+            if response.get("stat") == "Ok" and response.get("stCode") == 200:
+                msg = f"Cancel Order successfully: {trading_symbol}"
+                Telegram_Message(msg)
+            elif response.get("stat") == "Not_Ok":
+                msg1 = f"Cancel Order Error : {trading_symbol}"
+                msg2 = response.get("errMsg") or None
+                Telegram_Message(msg1, msg2)
+            else:
+                msg1 = f"Cancel Order Error : {trading_symbol}"
+                msg2 = json.dumps(response, indent=2)
+                Telegram_Message(msg1,msg2)
+        else:
+            msg = f"Modify Order Error No response received: {trading_symbol}"
+            Telegram_Message(msg)
+
+        print("Order Response:", response )
+        return response
+    except Exception as e:
+        msg1 = f"Cancel Order Error : {trading_symbol}"
+        print(msg1,e)
+        Telegram_Message(msg1,str(e))
+
+
+# trading_symbol = "NIFTY25JAN23200CE"
+# order_id = "250119000000718"
+# response = cancel_order(order_id,trading_symbol)
+# print(response)
+# ok Order Response: {'result': '250120000480289', 'stat': 'Ok', 'stCode': 200}
+#__________________________________________________________________________________________________________________________
+
 
 
