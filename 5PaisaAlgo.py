@@ -66,6 +66,21 @@ def login_to_Anjal(LoginData):
         print("❌ Anjal Login Failed:", str(e))
 #______________________________________________________________________________________________________________________________________________
 
+#  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login  #  kotak Login
+from neo_api_client import NeoAPI
+def login_to_kotak(LoginData):
+    try:
+        client = NeoAPI(consumer_key=LoginData["consumer_key"], consumer_secret= LoginData["consumer_secret"], environment="prod")
+        client.login(mobilenumber=LoginData["mobilenumber"], password=LoginData["password"])
+        client.session_2fa(OTP=LoginData["MPIN"])
+        print("Kotak Login successfully")
+        return client
+    except Exception as e:
+        print(f"login_to_kotak function Error: {str(e)}")
+        return None
+# client = login_to_kotak(Kotak_LoginData_Mitul)
+#______________________________________________________________________________________________________________________________________________________
+
 # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time # fetch_Date_Time
 
 from datetime import datetime, timedelta, time
