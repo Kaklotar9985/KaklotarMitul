@@ -717,7 +717,6 @@ def Entry_Data (target_dict, Symbol, Symboltoken, StrikePrice, OptionType, Sell_
             error_msg = f"Entry_Data function Error:"
             Telegram_Message(error_msg, str(e))
             print(error_msg, e)
-            time.sleep(1)  # Wait before retrying
 
 # # Example usage
 # StrikePrice = 23250
