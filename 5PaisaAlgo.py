@@ -569,12 +569,10 @@ def Order_Status(order_id, client):
 # Status = Order_Status(order_id, kotak_client)
 # print(Status)
 #_________________________________________________________________________________________________________________________________________________________________________
-
 from datetime import datetime, timedelta, time
-import time
 import math
 import json
-'''
+# import time
 def Entry_Data (target_dict, Symbol, Symboltoken, StrikePrice, OptionType, Sell_Price, Quantity, Exit_Type, SELL_orderid = None, Entry_Time = None, Close_915 = None, Close_PC = None ) :
         try:
           Top_Loss = math.ceil((float(Sell_Price) * 1.20) * 20) / 20 # 
@@ -674,4 +672,4 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 # # Example usage
 # Entry("CE", 75, "Offline", CE_Detail, Candal_Data, Kotak_Scrip_Data, kotak_client) # Live_Auto Offline
 # Entry("PE", 75, "Offline", PE_Detail, Candal_Data, Kotak_Scrip_Data, kotak_client) # Live_Auto Offline
-'''
+
