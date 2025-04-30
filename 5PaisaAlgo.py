@@ -569,6 +569,48 @@ def Order_Status(order_id, client):
 # Status = Order_Status(order_id, kotak_client)
 # print(Status)
 #_________________________________________________________________________________________________________________________________________________________________________
+# fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions numeric_cols
+def fetch_positions(client):
+    try:
+        res = client.positions()
+        if res.get("stat") == "ok" and res.get("stCode") == 200:
+            df = pd.DataFrame(res["data"])
+            numeric_cols = ["cfBuyAmt", "cfSellAmt", "buyAmt", "sellAmt", "flBuyQty", "cfBuyQty", "cfSellQty", "flSellQty"]
+            df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce', axis=0)
+            df["Net_Qty"] = df.eval("(flBuyQty + cfBuyQty) - (cfSellQty + flSellQty)")
+            return df
+        return None
+    except Exception as e:
+        print("fetch_positions function Error:", e)
+        Telegram_Message("fetch_positions function Error: " + str(e))
+        return None
+# Example usage
+# Positions = fetch_positions(kotak_client)
+# print(tabulate(Positions, headers="keys", tablefmt="pretty", showindex=True))
+#_________________________________________________________________________________________________________________________________________________________________________
+
+# fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty  fetch_Qty
+def fetch_Qty(client, Tokens):
+    try:
+        Positions = fetch_positions(client)
+        if Positions is None:
+           return 0
+        row = Positions.loc[Positions["tok"] == str(Tokens)]
+        if not row.empty:
+            return row["Net_Qty"].values[0]
+        else:
+            return 0 
+    except Exception as e:
+        print("fetch_Qty_from_cache Error:", e)
+        Telegram_Message("fetch_Qty_from_cache Error: " + str(e))
+        return 0
+
+# Example usage
+# Tokens = 38604
+# Qty = fetch_Qty(kotak_client, Tokens)
+# print(Qty)
+#_________________________________________________________________________________________________________________________________________________________________________
+
 from datetime import datetime, timedelta, time
 from tabulate import tabulate
 import math
