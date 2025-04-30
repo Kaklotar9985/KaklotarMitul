@@ -718,7 +718,7 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 #__________________________________________________________________________________________________________________________________________________
 
 # Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function  
-import time
+import time as tm
 def Execution_function(trading_symbol, Symboltoken, quantity, price, transaction_type, Timeout, client):
      try:
         response  =   place_order( trading_symbol    = trading_symbol,
@@ -734,7 +734,7 @@ def Execution_function(trading_symbol, Symboltoken, quantity, price, transaction
                 status = order_detail.get("ordSt")
                 if status == "complete":
                     return response
-                time.sleep(1)
+                tm.sleep(1)
             
             Position_QTY = fetch_Qty(client, Symboltoken)
             modify_quantity = quantity - int(abs(Position_QTY))
