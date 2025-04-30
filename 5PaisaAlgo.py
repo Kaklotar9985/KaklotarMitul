@@ -570,5 +570,107 @@ def Order_Status(order_id, client):
 # print(Status)
 #_________________________________________________________________________________________________________________________________________________________________________
 
+from datetime import datetime, timedelta, time
+import time
+import math
+import json
+def Entry_Data (target_dict, Symbol, Symboltoken, StrikePrice, OptionType, Sell_Price, Quantity, Exit_Type, SELL_orderid = None, Entry_Time = None, Close_915 = None, Close_PC = None ) :
+        try:
+          Top_Loss = math.ceil((float(Sell_Price) * 1.20) * 20) / 20 # 
+          TSL_1    = math.ceil((float(Sell_Price) * 0.80) * 20) / 20
+          TSL_2    = math.ceil((float(Sell_Price) * 0.60) * 20) / 20
+          Target   = math.floor((float(Sell_Price)* 0.55) * 20) / 20
 
+          if Exit_Type == "Top_Loss":
+              Exit_Trigger = Top_Loss
+              Exit_Type = "Top Loss"
+          elif Exit_Type == "TSL_1":
+              Exit_Trigger = Sell_Price
+              Exit_Type = "TSL-1"
+          elif Exit_Type == "TSL_2":
+              Exit_Trigger = TSL_1
+              Exit_Type = "TSL-2"
+
+          Sell ={ f"{OptionType}_SELL_orderid": SELL_orderid,   f"{OptionType}_Entry_Time": Entry_Time, f"{OptionType}_SL_orderid": None,
+                  f"{OptionType}_SL_orderDate": None,           f"{OptionType}_Symbol": Symbol,         f"{OptionType}_Symboltoken": Symboltoken,
+                  f"{OptionType}_StrikePrice": StrikePrice,     f"{OptionType}_Close_915": Close_915,   f"{OptionType}_Close_PC": Close_PC,
+                  f"{OptionType}_Sell_Qty": Quantity,           f"{OptionType}_Sell_Price": Sell_Price, f"{OptionType}_Top_Loss": Top_Loss,
+                  f"{OptionType}_TSL_1": TSL_1,                 f"{OptionType}_TSL_2": TSL_2,           f"{OptionType}_Target": Target,
+                  f"{OptionType}_Exit_Price": None,             f"{OptionType}_Exit_Time": None,        f"{OptionType}_Exit_Type": Exit_Type,
+                  f"{OptionType}_Exit_Trigger": Exit_Trigger,   f"{OptionType}_LTP": None  }
+
+          WebSoket_subscribe(Symboltoken)
+
+          update_variable(target_dict, "Yes", f"{OptionType}_Tred")
+          update_variable(target_dict, Sell, f"{OptionType}_Detail")
+
+          # Print JSON स्ट्रिंग के रूप में फॉर्मेट करें
+          tabulate_data = [[key, value] for key, value in Sell.items()]
+          print(tabulate(tabulate_data, headers=['Key', 'Value'], tablefmt='pretty'))
+          formatted_message = json.dumps(Sell, indent=2)
+          Telegram_Message(f"{OptionType}_Entry : Place Market Order Complete.",formatted_message)
+
+
+        except Exception as e:  # Error handling and retry logic
+            error_msg = f"Entry_Data function Error:"
+            Telegram_Message(error_msg, str(e))
+            print(error_msg, e)
+            time.sleep(1)  # Wait before retrying
+
+# # Example usage
+# StrikePrice = 23250
+# OptionType = "PE"
+# Sell_Price = 255.15
+# Quantity = 375
+# Exit_Type = "TSL_1"  # "Top_Loss" , "TSL_1" , "TSL_2"
+# ExpiryDates = Next_Expiry  # Curnent_Expiry , Next_Expiry
+# Symbol, Symboltoken = Symbol_SymbolToken("24200","CE", ExpiryDates)
+# Kotak_Symbol = fetch_Kotak_Symbol(Symboltoken)
+# Entry_Data (Kotak_Symbol, Symboltoken, StrikePrice, OptionType, Sell_Price, Quantity, Exit_Type )
+#__________________________________________________________________________________________________________________________________________________
+
+# Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry
+def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_Scrip_Data, kotak_client):
+    if "09:20:00" <= get_live_datetime("live_time") <= "23:59:00":
+      if Read_Variable( CE_Detail,f"{OptionType}_Tred") is None and  Candal_Data[OptionType]["Tred"] == "Yes" :
+         Symboltoken  = Candal_Data[OptionType]["Symboltoken"]
+         Close_915    = Candal_Data[OptionType]["Close_915"]
+         Close_PC     = Candal_Data[OptionType]["Close_PC"]
+         StrikePrice  = Candal_Data[OptionType]["StrikePrice"]
+         Kotak_Symbol = fetch_Kotak_Symbol(Symboltoken, Kotak_Scrip_Data)
+
+         if Execution == "Live_Auto" :
+            response  =   place_order(Kotak_Symbol, Sell_Quantity, trigger_price = 0, transaction_type="S", order_type="MKT", client = kotak_client)
+
+         if Execution == "Offline" :
+            response  =  {'nOrdNo': '123', 'stat': 'Ok', 'stCode': 200}
+            Offline = {'nOrdNo': '123', 'ordSt': 'complete', 'ordDtTm': get_live_datetime("live_datetime"),'trdSym': Kotak_Symbol,
+                        'stkPrc': StrikePrice, 'fldQty': Sell_Quantity, 'avgPrc' : Close_PC }
+
+         if response is not None and response.get("stat") == "Ok" and response.get("stCode") == 200:
+            order_id = response["nOrdNo"]
+            Order_Detail = Order_Status(order_id, kotak_client) if Execution == "Live_Auto" else Offline
+            Status = Order_Detail.get("ordSt")
+            if Status == "complete":   # complete
+               Sell_orderid = Order_Detail.get("nOrdNo")
+               Entry_Time   = Order_Detail.get("ordDtTm")
+               Symbol       = Order_Detail.get("trdSym")
+               StrikePrice  = Order_Detail.get("stkPrc")
+               Quantity     = Order_Detail.get("fldQty")
+               Sell_Price   = Order_Detail.get("avgPrc")
+
+               Entry_Data ( target_dict, Kotak_Symbol, Symboltoken, StrikePrice, OptionType, Sell_Price, Quantity = Quantity, Exit_Type ="Top_Loss",
+                            SELL_orderid = Sell_orderid, Entry_Time = Entry_Time, Close_915 = Close_915, Close_PC = Close_PC )
+            else :
+               msg = f"Entry Order Status : {Status}"
+               print(msg)
+               Telegram_Message(msg)
+         else :
+            msg = f"Entry Order Error : {Kotak_Symbol}"
+            print(msg)
+            Telegram_Message(msg)
+
+# # Example usage
+# Entry("CE", 75, "Offline", CE_Detail, Candal_Data, Kotak_Scrip_Data, kotak_client) # Live_Auto Offline
+# Entry("PE", 75, "Offline", PE_Detail, Candal_Data, Kotak_Scrip_Data, kotak_client) # Live_Auto Offline
 
