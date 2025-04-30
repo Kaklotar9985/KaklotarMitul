@@ -615,7 +615,67 @@ from datetime import datetime, timedelta, time
 from tabulate import tabulate
 import math
 import json
-# import time
+import time as tm
+
+# Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function  
+def Execution_function(trading_symbol, Symboltoken, quantity, price, transaction_type, Timeout, client):
+     try:
+        response  =   place_order( trading_symbol    = trading_symbol,
+                                      quantity          = quantity,
+                                      trigger_price     = price,
+                                      transaction_type  = transaction_type,
+                                      order_type        = "L",
+                                      client            = client, ) 
+        if response.get("stat") == "Ok" and response.get("stCode") == 200:
+            order_id = response["nOrdNo"]
+            for _ in range(Timeout):
+                order_detail = Order_Status(order_id, client)
+                status = order_detail.get("ordSt")
+                if status == "complete":
+                    return response
+                tm.sleep(1)
+            
+            Position_QTY = fetch_Qty(client, Symboltoken)
+            modify_quantity = quantity - int(abs(Position_QTY))
+            if modify_quantity <= 0:
+               return None
+            modify_response = modify_order(order_id         = order_id , 
+                                              trading_symbol   = trading_symbol, 
+                                              quantity         = modify_quantity,
+                                              trigger_price    = 310,  #  0
+                                              transaction_type = transaction_type, 
+                                              order_type       = "L",  # MKT
+                                              client           =  client   )
+            if modify_response.get("stat") == "Ok" and response.get("stCode") == 200:
+               return modify_response
+            else:
+               msg1 = f"modify order Error : {trading_symbol}"
+               print(msg1)
+               Telegram_Message(msg1)
+               return None
+        else:
+            msg1 = f"Limit Order Placed Error : {trading_symbol}"
+            print(msg1)
+            Telegram_Message(msg1)
+            return None      
+
+     except Exception as e:
+        msg1 = f"Execution_function Error : {trading_symbol}"
+        print(msg1,e)
+        Telegram_Message(msg1,str(e))
+        return None
+
+# trading_symbol  = "NIFTY2550824400PE"
+# Symboltoken     = 38607
+# quantity        = 75
+# price           = 300
+# transaction_type= "S"
+# Timeout         = 10
+# client          = kotak_client
+# response = Execution_function(trading_symbol, Symboltoken, quantity, price, transaction_type, Timeout, client)
+# print(response)
+#__________________________________________________________________________________________________________________________________________________
+
 def Entry_Data (target_dict, Symbol, Symboltoken, StrikePrice, OptionType, Sell_Price, Quantity, Exit_Type, SELL_orderid = None, Entry_Time = None, Close_915 = None, Close_PC = None ) :
         try:
           Top_Loss = math.ceil((float(Sell_Price) * 1.20) * 20) / 20 # 
