@@ -718,6 +718,7 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 #__________________________________________________________________________________________________________________________________________________
 
 # Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function   Execution_function  
+import time
 def Execution_function(trading_symbol, Symboltoken, quantity, price, transaction_type, Timeout, client):
      try:
         response  =   place_order( trading_symbol    = trading_symbol,
