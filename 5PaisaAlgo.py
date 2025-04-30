@@ -570,6 +570,7 @@ def Order_Status(order_id, client):
 # print(Status)
 #_________________________________________________________________________________________________________________________________________________________________________
 from datetime import datetime, timedelta, time
+from tabulate import tabulate
 import math
 import json
 # import time
