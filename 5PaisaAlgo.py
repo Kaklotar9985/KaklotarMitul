@@ -17,7 +17,7 @@ def Telegram_Message(*args):
 # Example usage
 # Telegram_Message("HI")
 #_____________________________________________________________________________________________________________________________________________________
-
+'''
 # login_to_5paisa  login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   login_to_5paisa   
 #!pip install py5paisa
 #!pip install pyotp
@@ -41,7 +41,7 @@ def login_to_5paisa(cred):
         print("❌ 5paisa Login Failed:", str(e))
         return None
 #____________________________________________________________________________________________________________________________________________________________________________________
-
+'''
 #  login_to_Anjal   login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal    login_to_Anjal   
 # !pip install smartapi-python
 # !pip install logzero
