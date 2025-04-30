@@ -632,7 +632,7 @@ def Entry_Data (target_dict, Symbol, Symboltoken, StrikePrice, OptionType, Sell_
 # Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry
 def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_Scrip_Data, kotak_client):
     if "09:20:00" <= get_live_datetime("live_time") <= "23:59:00":
-      if Read_Variable( CE_Detail,f"{OptionType}_Tred") is None and  Candal_Data[OptionType]["Tred"] == "Yes" :
+      if Read_Variable( target_dict,f"{OptionType}_Tred") is None and  Candal_Data[OptionType]["Tred"] == "Yes" :
          Symboltoken  = Candal_Data[OptionType]["Symboltoken"]
          Close_915    = Candal_Data[OptionType]["Close_915"]
          Close_PC     = Candal_Data[OptionType]["Close_PC"]
