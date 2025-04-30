@@ -599,7 +599,7 @@ def Entry_Data (target_dict, Symbol, Symboltoken, StrikePrice, OptionType, Sell_
                   f"{OptionType}_Exit_Price": None,             f"{OptionType}_Exit_Time": None,        f"{OptionType}_Exit_Type": Exit_Type,
                   f"{OptionType}_Exit_Trigger": Exit_Trigger,   f"{OptionType}_LTP": None  }
 
-          WebSoket_subscribe(Symboltoken)
+          #WebSoket_subscribe(Symboltoken)
 
           update_variable(target_dict, "Yes", f"{OptionType}_Tred")
           update_variable(target_dict, Sell, f"{OptionType}_Detail")
