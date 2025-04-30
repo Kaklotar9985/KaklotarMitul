@@ -569,7 +569,7 @@ def Order_Status(order_id, client):
 # Status = Order_Status(order_id, kotak_client)
 # print(Status)
 #_________________________________________________________________________________________________________________________________________________________________________
-'''
+
 from datetime import datetime, timedelta, time
 import time
 import math
@@ -673,4 +673,4 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 # # Example usage
 # Entry("CE", 75, "Offline", CE_Detail, Candal_Data, Kotak_Scrip_Data, kotak_client) # Live_Auto Offline
 # Entry("PE", 75, "Offline", PE_Detail, Candal_Data, Kotak_Scrip_Data, kotak_client) # Live_Auto Offline
-'''
+
