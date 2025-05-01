@@ -780,3 +780,76 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 # Entry("PE", 75, "Offline", PE_Detail, Candal_Data, Kotak_Scrip_Data, kotak_client) # Live_Auto Offline
 #__________________________________________________________________________________________________________________________________________________
 
+# feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket
+from SmartApi.smartWebSocketV2 import SmartWebSocketV2
+from SmartApi import SmartConnect
+import pyotp
+
+feedjson    = {}
+ATM_Strik   = None
+Nifty_LTP   = None
+WebSoket_Status = None
+
+def on_data(wsapp, message):
+    global feedjson
+    global ATM_Strik
+    global Nifty_LTP
+    token =  message.get("token")
+    last_traded_price = (message.get("last_traded_price"))/100
+    Bid_price = (max(item['price'] for item in (message["best_5_buy_data"])))/100
+    Ask_price = (min(item['price'] for item in (message["best_5_sell_data"])))/100
+    if  token is not None and last_traded_price is not None and Bid_price is not None and Ask_price is not None:
+        feedjson[token] = {"token": token,"last_traded_price": last_traded_price,"Bid_price": Bid_price,"Ask_price": Ask_price}
+        Nifty_LTP=feedjson["26000"]["last_traded_price"]
+        ATM_Strik = round(Nifty_LTP / 50) * 50
+
+def on_open(wsapp):
+    global WebSoket_Status
+    print("Anjal_WebSoket : Open")
+    WebSoket_Status = "Open"
+    token_list = [{"exchangeType": 1, "tokens": ["26000"]}]
+    sws.subscribe("abc123", 3, token_list)
+
+def on_error(wsapp, error):
+    global WebSoket_Status
+    WebSoket_Status = "Error"
+    print("Anjal_WebSoket : Error")
+
+def on_close(wsapp):
+    global WebSoket_Status
+    print("Anjal_WebSoket : Close")
+    WebSoket_Status = "Close"
+
+
+def close_connection():
+    sws.close_connection()
+    print("Anjal_WebSoket : Connection closed manually.")
+
+# Assign the callbacks.
+sws.on_open  = on_open
+sws.on_data  = on_data
+sws.on_error = on_error
+sws.on_close = on_close
+
+# sws.connect()
+threading.Thread(target=sws.connect).start()
+# ____________________________________________________________________________________________________________________________________________________
+# WebSocket Subscription function # WebSocket Subscription function # WebSocket Subscription function # WebSocket Subscription function # WebSocket Subscription function
+def WebSoket_subscribe(symboltoken, unsubscribe=None):
+    global WebSoket_Status
+    token_list = [{"exchangeType": 2, "tokens": [symboltoken]}]
+    try :
+        if WebSoket_Status == "Close" :
+           threading.Thread(target=sws.connect).start()
+        if WebSoket_Status == "Open" :
+           if unsubscribe == "unsubscribe":
+              sws.unsubscribe("abc123", 3, token_list)
+           else:
+              sws.subscribe("abc123", 3, token_list)
+    except Exception as e:
+        print( "WebSoket_subscribe Error :", e )
+
+#  Test the function
+#  WebSoket_subscribe("46120", "unsubscribe")  # Expected: Unsubscribed message
+#  WebSoket_subscribe("46120")                 # Expected: Subscribed message
+# ____________________________________________________________________________________________________________________________________________________
