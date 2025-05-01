@@ -50,7 +50,7 @@ from SmartApi import SmartConnect
 import pyotp
 
 def login_to_Anjal(LoginData):
-    global smartApi , data , AUTH_TOKEN , refreshToken , FEED_TOKEN , res , sms
+    global  smartApi, AUTH_TOKEN, refreshToken, FEED_TOKEN, sws
     try:
         smartApi = SmartConnect(api_key=LoginData["API_KEY"])
         session_data = smartApi.generateSession(LoginData["USERNAME"], LoginData["PWD"], pyotp.TOTP(LoginData["TOKEN"]).now())
