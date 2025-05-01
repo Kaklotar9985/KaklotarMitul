@@ -781,7 +781,7 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 #__________________________________________________________________________________________________________________________________________________
 
 
-
+Anjal_LoginData_Sunny = { "API_KEY" : "KiISCmA3", "USERNAME" : "MEHV1124", "TOKEN" : "TOYSZOZNAUGY3LRX65IF6UYW4U", "PWD" : "9999" }
 Anjal_LoginData_Vihya = { "API_KEY" : "6SJfAaoo", "USERNAME" : "MEHV1053", "TOKEN" : "JKNQVWPCEZBTDD2R6F4JUI5ZJA", "PWD" : "9999" }
 smartApi, AUTH_TOKEN, refreshToken, FEED_TOKEN, sws = login_to_Anjal(Anjal_LoginData_Sunny)
 
