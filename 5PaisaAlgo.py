@@ -1,6 +1,3 @@
-
-
-
 # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message
 # !pip install telebot
 import telebot
