@@ -869,7 +869,7 @@ def WebSoket_subscribe(symboltoken, unsubscribe=None):
 # Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message  
 def Candal_Data_Message(CALL_Entry_Run, PUT_Entry_Run, CALL_Exit_Run, PUT_Exit_Run, Candal_Data, time_frame):
     try:
-        if "09:20:00" <= AG.get_live_datetime("live_time") <= "23:59:00" and isinstance(Candal_Data, dict):
+        if "09:20:00" <= get_live_datetime("live_time") <= "23:59:00" and isinstance(Candal_Data, dict):
             CE = Candal_Data.get("CE", {})
             PE = Candal_Data.get("PE", {})
             CE_Close_PC = CE.get("Close_PC", 0)
