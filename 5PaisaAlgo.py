@@ -225,10 +225,12 @@ def Symbol_SymbolToken(Scrip_Data, Strike ,Option_Type, Expiry, Index = "NIFTY")
 # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data  # fetch_Candal_Data
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
-def fetch_Candle_Data_Fast(symboltoken, Symbol, StrikePrice, OP_tipe, last_trading_date, First_Candle_Time, Previous_Candle_Time, smartApi):
+def fetch_Candle_Data_Fast(symboltoken, Symbol, StrikePrice, OP_tipe, time_frame, last_trading_date, First_Candle_Time, Previous_Candle_Time, smartApi):
     try:
         if "09:20:00" <= get_live_datetime("live_time") <= "23:59:00":
-            historicParam = { "exchange": "NFO", "symboltoken": symboltoken, "interval": "FIVE_MINUTE", "fromdate": f"{last_trading_date} 09:00",  "todate": f"{last_trading_date} 15:30" }
+            time_frame_list = { 5 : "FIVE_MINUTE", 15 : "FIFTEEN_MINUTE",}
+            interval = time_frame_list.get(time_frame)
+            historicParam = { "exchange": "NFO", "symboltoken": symboltoken, "interval": interval, "fromdate": f"{last_trading_date} 09:00",  "todate": f"{last_trading_date} 15:30" }
             response = smartApi.getCandleData(historicParam)
             if not response.get("data"):
                 return None
@@ -244,7 +246,7 @@ def fetch_Candle_Data_Fast(symboltoken, Symbol, StrikePrice, OP_tipe, last_tradi
         print(f"fetch_Candle_Data_Fast function Error: {e}")
         return None
 
-def fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, last_trading_date, First_Candle_Time):
+def fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, time_frame, last_trading_date, First_Candle_Time):
     try:
         symbol_to_token = Scrip_Data.set_index('symbol')['token'].to_dict()
         CEstrike = strike
@@ -255,10 +257,10 @@ def fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, last_trading_da
         PE_SymbolToken = symbol_to_token.get(PEToken)
         if not CE_SymbolToken or not PE_SymbolToken:
             raise ValueError("Symbol token not found for CE or PE")
-        Previous_Candle_Time = get_candle_times(time_frame=5, Candle_no=-2, format="%H:%M")
+        Previous_Candle_Time = get_candle_times(time_frame = time_frame, Candle_no=-2, format="%H:%M")
         with ThreadPoolExecutor(max_workers=2) as executor:
-            ce_future = executor.submit( fetch_Candle_Data_Fast, CE_SymbolToken, CEToken, CEstrike, "CE",last_trading_date, First_Candle_Time, Previous_Candle_Time, smartApi )
-            pe_future = executor.submit( fetch_Candle_Data_Fast, PE_SymbolToken, PEToken, PEstrike, "PE", last_trading_date, First_Candle_Time, Previous_Candle_Time, smartApi)
+            ce_future = executor.submit( fetch_Candle_Data_Fast, CE_SymbolToken, CEToken, CEstrike, "CE", time_frame, last_trading_date, First_Candle_Time, Previous_Candle_Time, smartApi )
+            pe_future = executor.submit( fetch_Candle_Data_Fast, PE_SymbolToken, PEToken, PEstrike, "PE", time_frame, last_trading_date, First_Candle_Time, Previous_Candle_Time, smartApi)
             CE_Candle_Data = ce_future.result()
             PE_Candle_Data = pe_future.result()
         return {"CE": CE_Candle_Data, "PE": PE_Candle_Data}
