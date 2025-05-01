@@ -274,8 +274,8 @@ def fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, time_frame, las
 # Curnent_Expiry, Next_Expiry, Expiry_List = fetch_ExpiryDate (Scrip_Data)
 # last_trading_date    = get_last_trading_date(fmt="%Y-%m-%d")
 # First_Candle_Time    = get_candle_times(time_frame=5, Candle_no=1, format="%H:%M")
-
-# Candal_Data = fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, last_trading_date, First_Candle_Time)
+# time_frame = 15
+# Candal_Data = fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, time_frame, last_trading_date, First_Candle_Time)
 # print(tabulate(pd.DataFrame(Candal_Data), headers='keys', tablefmt='pretty', showindex=True))
 #______________________________________________________________________________________________________________________________________________________________________________
 
