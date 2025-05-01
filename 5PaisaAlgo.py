@@ -1,5 +1,9 @@
+
+
+
 # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message  # Telegram Message
 # !pip install telebot
+import telebot
 import telebot
 def Telegram_Message(*args):
     BOT_TOKEN = '7591009372:AAEkZFnOZ1UyqxQgiTSJVqKqr1uvPP5KqPI'
@@ -7,13 +11,15 @@ def Telegram_Message(*args):
     Tel_JB_Sons_ID      = "-1002263632329"
     Tel_Jay_Mataji_ID   = '1170793375'
     CHAT_ID = Tel_Jay_Mataji_ID
-    try:
-      bot = telebot.TeleBot(BOT_TOKEN)
-      message = "\n".join(filter(None, args))
-      bot.send_message(CHAT_ID, message)
-      print("Message sent successfully!")
-    except Exception as e:
-        print( f"Telegram_Message function Error :", e )
+    for attempt in range(3):
+        try:
+          bot = telebot.TeleBot(BOT_TOKEN)
+          message = "\n".join(filter(None, args))
+          bot.send_message(CHAT_ID, message)
+          print("Message sent successfully!")
+          break
+        except Exception as e:
+            print( f"Attempt {attempt+1}:Telegram_Message function Error :", e )
 # Example usage
 # Telegram_Message("HI")
 #_____________________________________________________________________________________________________________________________________________________
