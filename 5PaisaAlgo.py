@@ -750,7 +750,7 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
          if Execution == "Offline" :
             response  =  {'nOrdNo': '123', 'stat': 'Ok', 'stCode': 200}
             Offline = {'nOrdNo': '123', 'ordSt': 'complete', 'ordDtTm': get_live_datetime("live_datetime"),'trdSym': Kotak_Symbol,
-                        'stkPrc': StrikePrice, 'fldQty': Sell_Quantity, 'avgPrc' : Close_PC }
+                        'stkPrc': StrikePrice, 'fldQty': Sell_Quantity, 'avgPrc' : Sell_Price }
 
          if response is not None and response.get("stat") == "Ok" and response.get("stCode") == 200:
             order_id = response["nOrdNo"]
