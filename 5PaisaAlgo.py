@@ -733,7 +733,7 @@ def Entry_Data (target_dict, Symbol, Symboltoken, StrikePrice, OptionType, Sell_
 #__________________________________________________________________________________________________________________________________________________
 
 # Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry  Entry
-def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_Scrip_Data, kotak_client):
+def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_Scrip_Data, client):
     if "09:20:00" <= get_live_datetime("live_time") <= "23:59:00":
       if Read_Variable( target_dict,f"{OptionType}_Tred") is None and  Candal_Data[OptionType]["Tred"] == "Yes" :
          Symboltoken  = Candal_Data[OptionType]["Symboltoken"]
@@ -741,10 +741,12 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
          Close_PC     = Candal_Data[OptionType]["Close_PC"]
          StrikePrice  = Candal_Data[OptionType]["StrikePrice"]
          Kotak_Symbol = fetch_Kotak_Symbol(Symboltoken, Kotak_Scrip_Data)
+         Sell_Price   = (Close_PC + 1)
 
          if Execution == "Live_Auto" :
-            response  =   place_order(Kotak_Symbol, Sell_Quantity, trigger_price = 0, transaction_type="S", order_type="MKT", client = kotak_client)
-
+            # response  = place_order(Kotak_Symbol, Sell_Quantity, trigger_price = 0, transaction_type="S", order_type="MKT", client = kotak_client)
+            response  = Execution_function(Kotak_Symbol, Symboltoken, Sell_Quantity, Sell_Price, transaction_type = "S", Timeout = 10, client = client)
+         
          if Execution == "Offline" :
             response  =  {'nOrdNo': '123', 'stat': 'Ok', 'stCode': 200}
             Offline = {'nOrdNo': '123', 'ordSt': 'complete', 'ordDtTm': get_live_datetime("live_datetime"),'trdSym': Kotak_Symbol,
@@ -752,7 +754,7 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 
          if response is not None and response.get("stat") == "Ok" and response.get("stCode") == 200:
             order_id = response["nOrdNo"]
-            Order_Detail = Order_Status(order_id, kotak_client) if Execution == "Live_Auto" else Offline
+            Order_Detail = Order_Status(order_id, client) if Execution == "Live_Auto" else Offline
             Status = Order_Detail.get("ordSt")
             if Status == "complete":   # complete
                Sell_orderid = Order_Detail.get("nOrdNo")
