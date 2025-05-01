@@ -783,7 +783,7 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
 
 
 Anjal_LoginData_Vihya = { "API_KEY" : "6SJfAaoo", "USERNAME" : "MEHV1053", "TOKEN" : "JKNQVWPCEZBTDD2R6F4JUI5ZJA", "PWD" : "9999" }
-smartApi, AUTH_TOKEN, refreshToken, FEED_TOKEN, sws = AG.login_to_Anjal(Anjal_LoginData_Sunny)
+smartApi, AUTH_TOKEN, refreshToken, FEED_TOKEN, sws = login_to_Anjal(Anjal_LoginData_Sunny)
 
 # feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket  feed Anjal_WebSoket
 from SmartApi.smartWebSocketV2 import SmartWebSocketV2
