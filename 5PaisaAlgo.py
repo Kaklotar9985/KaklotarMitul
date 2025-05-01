@@ -865,3 +865,28 @@ def WebSoket_subscribe(symboltoken, unsubscribe=None):
 #  WebSoket_subscribe("46120", "unsubscribe")  # Expected: Unsubscribed message
 #  WebSoket_subscribe("46120")                 # Expected: Subscribed message
 # ____________________________________________________________________________________________________________________________________________________
+
+# Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message   Candal_Data_Message  
+def Candal_Data_Message(CALL_Entry_Run, PUT_Entry_Run, CALL_Exit_Run, PUT_Exit_Run, Candal_Data, time_frame):
+    try:
+        if "09:20:00" <= AG.get_live_datetime("live_time") <= "23:59:00" and isinstance(Candal_Data, dict):
+            CE = Candal_Data.get("CE", {})
+            PE = Candal_Data.get("PE", {})
+            CE_Close_PC = CE.get("Close_PC", 0)
+            PE_Close_PC = PE.get("Close_PC", 0)
+            Total_Premium = round(CE_Close_PC + PE_Close_PC, 2)
+            text_message = (
+                f"{time_frame} Minute TimeFrem \n"
+                " \n"
+                f"Total Premium = {Total_Premium}\n"
+                f"{CE.get('StrikePrice', 'N/A')} CE = {CE.get('Close_915', 'N/A')} / {CE_Close_PC} ({CE.get('Tred', 'N/A')})\n"
+                f"{PE.get('StrikePrice', 'N/A')} PE = {PE.get('Close_915', 'N/A')} / {PE_Close_PC} ({PE.get('Tred', 'N/A')})\n"
+                "\n"
+                f"Live Entry = CE : {CALL_Entry_Run} ,  PE : {PUT_Entry_Run}\n"
+                f"Live Exit    = CE : {CALL_Exit_Run} ,  PE : {PUT_Exit_Run}" )
+            Telegram_Message(text_message)
+    except Exception as e:
+        error_message = f"Candal_Data_Message function Error: {str(e)}"
+        Telegram_Message(error_message)  # त्रुटि संदेश टेलीग्राम पर भेजें
+        print(error_message)
+#_________________________________________________________________________________________________________________________________________________________________________________
