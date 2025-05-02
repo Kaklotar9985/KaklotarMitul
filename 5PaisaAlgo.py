@@ -744,7 +744,7 @@ def Entry(OptionType, Sell_Quantity, Execution, target_dict, Candal_Data, Kotak_
          Close_PC     = Candal_Data[OptionType]["Close_PC"]
          StrikePrice  = Candal_Data[OptionType]["StrikePrice"]
          Kotak_Symbol = fetch_Kotak_Symbol(Symboltoken, Kotak_Scrip_Data)
-         Sell_Price   = (Close_PC + 1)
+         Sell_Price   = (Close_PC + 2)
 
          if Execution == "Live_Auto" :
             # response  = place_order(Kotak_Symbol, Sell_Quantity, trigger_price = 0, transaction_type="S", order_type="MKT", client = kotak_client)
