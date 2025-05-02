@@ -647,7 +647,7 @@ def Execution_function(trading_symbol, Symboltoken, quantity, price, transaction
             modify_response = modify_order(order_id         = order_id , 
                                               trading_symbol   = trading_symbol, 
                                               quantity         = modify_quantity,
-                                              trigger_price    = (price+10),  #  0
+                                              trigger_price    = ((price)+10),  #  0
                                               transaction_type = transaction_type, 
                                               order_type       = "L",  # MKT
                                               client           =  client   )
@@ -871,7 +871,10 @@ def Candal_Data_Message(CALL_Entry_Run, PUT_Entry_Run, CALL_Exit_Run, PUT_Exit_R
             PE = Candal_Data.get("PE", {})
             CE_Close_PC = CE.get("Close_PC", 0)
             PE_Close_PC = PE.get("Close_PC", 0)
-            Total_Premium = round(CE_Close_PC + PE_Close_PC, 2)
+            try:
+              Total_Premium = round(CE_Close_PC + PE_Close_PC, 2)
+            except
+              Total_Premium = 0
             text_message = (
                 f"{time_frame} Minute TimeFrem \n"
                 " \n"
