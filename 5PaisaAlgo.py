@@ -253,7 +253,7 @@ def fetch_Candle_Data(smartApi, Scrip_Data, strike, Next_Expiry, time_frame, las
     try:
         symbol_to_token = Scrip_Data.set_index('symbol')['token'].to_dict()
         CEstrike = strike
-        PEstrike = str(int(strike) + 50)
+        PEstrike = str(int(strike) + 0)
         CEToken = f"NIFTY{Next_Expiry}{CEstrike}CE"
         PEToken = f"NIFTY{Next_Expiry}{PEstrike}PE"
         CE_SymbolToken = symbol_to_token.get(CEToken)
