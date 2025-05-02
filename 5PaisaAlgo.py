@@ -873,7 +873,7 @@ def Candal_Data_Message(CALL_Entry_Run, PUT_Entry_Run, CALL_Exit_Run, PUT_Exit_R
             PE_Close_PC = PE.get("Close_PC", 0)
             try:
               Total_Premium = round(CE_Close_PC + PE_Close_PC, 2)
-            except
+            except:
               Total_Premium = 0
             text_message = (
                 f"{time_frame} Minute TimeFrem \n"
