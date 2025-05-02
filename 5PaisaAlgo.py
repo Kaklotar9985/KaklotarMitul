@@ -647,9 +647,9 @@ def Execution_function(trading_symbol, Symboltoken, quantity, price, transaction
             modify_response = modify_order(order_id         = order_id , 
                                               trading_symbol   = trading_symbol, 
                                               quantity         = modify_quantity,
-                                              trigger_price    = ((price)+10),  #  0
+                                              trigger_price    = 0 ,  #  0  ((price)+10)
                                               transaction_type = transaction_type, 
-                                              order_type       = "L",  # MKT
+                                              order_type       = "MKT",  # MKT  "L"
                                               client           =  client   )
             if modify_response.get("stat") == "Ok" and response.get("stCode") == 200:
                return modify_response
