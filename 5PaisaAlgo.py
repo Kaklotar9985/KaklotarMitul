@@ -298,7 +298,7 @@ def get_Variable_DataNone(Variable_Name):
                                     "PE_Sell_Price"  : None, "PE_Top_Loss"    : None, "PE_TSL_1"       : None, "PE_TSL_2"       : None,  "PE_Target"      : None,
                                     "PE_Exit_Price"  : None, "PE_Exit_Time"   : None, "PE_Exit_Type"   : None, "PE_Exit_Trigger": None,  "PE_LTP"         : None }}
         if Variable_Name == "Tred_Detail":
-          return    { "CALL_List": [], "PUT_List": [] }
+          return    { "CE_List": [], "PE_List": [] }
     except Exception as e:
         print(f"get_Variable_DataNone function Error: {e}")
 # ________________________________________________________________________________________________________________________________________________________________________________
