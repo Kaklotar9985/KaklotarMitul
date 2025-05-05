@@ -551,28 +551,22 @@ def fetch_OrderBook(client):
 #_________________________________________________________________________________________________________________________________________________________________
 # Order_Status  Order_Status  Order_Status  Order_Status  Order_Status  Order_Status  Order_Status  Order_Status
 import json
+import time as tm
 def Order_Status(order_id, client):
-    try:
-        order_book = fetch_OrderBook(client)
-        if order_book is None or order_book.empty:
-            msg = f"Order_id : {order_id}, OrderBook Empty or None"
-            Telegram_Message(msg)
-            return None
-
-        # Check if order_id exists directly
-        match = order_book.loc[order_book["nOrdNo"] == order_id]
-        if match.empty:
-            msg = f"Order_id : {order_id}, Information Not Available"
-            Telegram_Message(msg)
-            return None
-        else:
-            return match.iloc[0].to_dict()  # Faster than converting to JSON
-    except Exception as e:
-        print("Order_Status function Error:", e)
-        return None
-# order_id = "250429000829748"
-# Status = Order_Status(order_id, kotak_client)
-# print(Status)
+    for attempt in range(3):
+        try:
+            order_book = fetch_OrderBook(client)
+            match = order_book.loc[order_book["nOrdNo"] == order_id]
+            if not match.empty:
+               return match.iloc[0].to_dict()
+            tm.sleep(1)
+        except Exception as e:
+            print("Order_Status function Error:", e)
+    return None 
+# order_id = "250505000398272"
+# client = kotak_client
+# Order_Detail = Order_Status(order_id, client)
+# print(Order_Detail)
 #_________________________________________________________________________________________________________________________________________________________________________
 # fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions  fetch_positions numeric_cols
 def fetch_positions(client):
