@@ -561,8 +561,11 @@ def Order_Status(order_id, client):
                return match.iloc[0].to_dict()
             tm.sleep(1)
         except Exception as e:
-            print("Order_Status function Error:", e)
+            msg = f"Order_Status function Error:"
+            Telegram_Message(msg,str(e))
+            print(msg,e)
     return None 
+
 # order_id = "250505000398272"
 # client = kotak_client
 # Order_Detail = Order_Status(order_id, client)
