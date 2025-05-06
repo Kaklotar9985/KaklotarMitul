@@ -889,7 +889,7 @@ def Candal_Data_Message(CALL_Entry_Run, PUT_Entry_Run, CALL_Exit_Run, PUT_Exit_R
 #_________________________________________________________________________________________________________________________________________________________________________________
 
 #  My_Position My_Position  My_Position My_Position  My_Position My_Position  My_Position My_Position  My_Position My_Position
-def My_Position():
+def My_Position(CE_Detail,PE_Detail):
         try:
             CALL_DATA = Read_Variable(CE_Detail, "CE_Detail", None)  # Fetch call data
             PUT_DATA  = Read_Variable(PE_Detail, "PE_Detail", None)  # Fetch put data
@@ -927,5 +927,5 @@ def My_Position():
             time.sleep(1)  # Wait before retrying
 
 # # उदाहरण के लिए
-# print(tabulate(My_Position(), headers='keys', tablefmt='pretty', showindex=False))
+# print(tabulate(My_Position(CE_Detail,PE_Detail), headers='keys', tablefmt='pretty', showindex=False))
 #_________________________________________________________________________________________________________________________________________________________________
