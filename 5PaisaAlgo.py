@@ -887,3 +887,45 @@ def Candal_Data_Message(CALL_Entry_Run, PUT_Entry_Run, CALL_Exit_Run, PUT_Exit_R
         Telegram_Message(error_message)  # त्रुटि संदेश टेलीग्राम पर भेजें
         print(error_message)
 #_________________________________________________________________________________________________________________________________________________________________________________
+
+#  My_Position My_Position  My_Position My_Position  My_Position My_Position  My_Position My_Position  My_Position My_Position
+def My_Position():
+        try:
+            CALL_DATA = Read_Variable(CE_Detail, "CE_Detail", None)  # Fetch call data
+            PUT_DATA  = Read_Variable(PE_Detail, "PE_Detail", None)  # Fetch put data
+
+            # Remove prefixes and prepare data
+            def process_data(data, type_prefix):
+                processed = {}
+                if data is not None:  # Ensure data is not None
+                    for key, value in data.items():
+                        new_key = key.replace(f"{type_prefix}_", "")
+                        processed[new_key] = value
+                return processed
+
+            call_data_processed = process_data(CALL_DATA, "CE")
+            put_data_processed = process_data(PUT_DATA, "PE")
+
+            # Align keys for both call and put data
+            all_keys = set(call_data_processed.keys()).union(put_data_processed.keys())
+
+            # Define the desired column order
+            column_order = [ "SELL_orderid", "Entry_Time", "SL_orderid", "SL_orderDate", "Symbol", "Symboltoken",
+                             "StrikePrice", "Close_915", "Close_PC", "Sell_Qty", "Sell_Price", "Top_Loss",
+                             "TSL_1", "TSL_2", "Target", "Exit_Price", "Exit_Time", "Exit_Type", "Exit_Trigger", "LTP" ]
+
+            ordered_keys = [key for key in column_order if key in all_keys]
+            Update_Position = pd.DataFrame({ "Column_Name": ordered_keys,
+                "Call": [call_data_processed.get(key, None) for key in ordered_keys],
+                "Put": [put_data_processed.get(key, None) for key in ordered_keys],})
+            return Update_Position
+        except Exception as e:  # Handle errors and retry logic
+            retries += 1
+            error_msg = f"My_Position function Error: {e}"
+            Telegram_Message(error_msg)
+            print(error_msg)
+            time.sleep(1)  # Wait before retrying
+
+# # उदाहरण के लिए
+# print(tabulate(My_Position(), headers='keys', tablefmt='pretty', showindex=False))
+#_________________________________________________________________________________________________________________________________________________________________
