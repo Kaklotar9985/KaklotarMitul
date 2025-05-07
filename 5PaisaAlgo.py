@@ -104,19 +104,20 @@ def get_live_datetime(Times = None):
 # Example usage
 # print(get_live_datetime())  #  # live_time, live_date, live_datetime
 
-def get_last_trading_date(fmt = None):
+def get_last_trading_date(fmt=None):  # module
     try:
-        current_dt = get_live_datetime()
+        current_dt = AG.get_live_datetime()
+        print(current_dt)
         if current_dt.weekday() == 5:  # शनिवार
             adjusted = current_dt - timedelta(days=1)
         elif current_dt.weekday() == 6:  # रविवार
             adjusted = current_dt - timedelta(days=2)
         else:
-            if current_dt.time() < time(9,15,1):
+            if current_dt.time() < time(9, 15, 1):
                 adjusted = current_dt - timedelta(days=1)
-                if adjusted.weekday() == 5:  # नया दिन शनिवार
+                if adjusted.weekday() == 5:
                     adjusted -= timedelta(days=1)
-                elif adjusted.weekday() == 6:  # नया दिन रविवार
+                elif adjusted.weekday() == 6:
                     adjusted -= timedelta(days=2)
             else:
                 adjusted = current_dt
@@ -124,9 +125,9 @@ def get_last_trading_date(fmt = None):
     except Exception as e:
         print(f"get_last_trading_day function Error : {e}")
         return None
-
 # Example usage
-# print(get_last_trading_date())
+# last_trading_date = AG.get_last_trading_date(fmt="%Y-%m-%d")
+# print(last_trading_date)
 
 def get_candle_times(time_frame=5, Candle_no=-1, format = None):
     try:
