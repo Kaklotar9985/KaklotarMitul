@@ -104,10 +104,9 @@ def get_live_datetime(Times = None):
 # Example usage
 # print(get_live_datetime())  #  # live_time, live_date, live_datetime
 
-def get_last_trading_date(fmt=None):  # module
+def get_last_trading_date(fmt=None): 
     try:
         current_dt = get_live_datetime()
-        print(current_dt)
         if current_dt.weekday() == 5:  # शनिवार
             adjusted = current_dt - timedelta(days=1)
         elif current_dt.weekday() == 6:  # रविवार
