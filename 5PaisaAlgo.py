@@ -106,7 +106,7 @@ def get_live_datetime(Times = None):
 
 def get_last_trading_date(fmt=None):  # module
     try:
-        current_dt = AG.get_live_datetime()
+        current_dt = get_live_datetime()
         print(current_dt)
         if current_dt.weekday() == 5:  # शनिवार
             adjusted = current_dt - timedelta(days=1)
