@@ -200,3 +200,39 @@ def get_HeikinAshi_Columns(DATA, Round_Minute, Candle_Name = None):
 # Datas = get_HeikinAshi_Columns(DATA, Round_Minute, Candle_Name)
 # print(tabulate(Datas, headers="keys", tablefmt="pretty", showindex=False))
 #____________________________________________________________________________________________________________________________________________________________
+
+# get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price   get_ORB_Price  
+def get_ORB_Price(DATA, From_DateTime, To_DateTime, Candle_Name = None):
+    if Candle_Name is None:
+        Candle_Name = { "datetime": "datetime", "open": "open", "high": "high", "low": "low", "close": "close" , "datetime_format" : "%Y-%m-%d %H:%M:%S",}
+    datetime_name   = Candle_Name.get("datetime").lower()
+    open_name       = Candle_Name.get("open").lower()
+    high_name       = Candle_Name.get("high").lower()
+    low_name        = Candle_Name.get("low").lower()
+    close_name      = Candle_Name.get("close").lower()
+    datetime_format = Candle_Name.get("datetime_format")
+
+    DATA = pd.DataFrame(DATA)
+    DATA.columns = [col.lower() for col in DATA.columns]
+    DATA[datetime_name] = pd.to_datetime(DATA[datetime_name], format = datetime_format)
+    
+    current_open_Time  = pd.to_datetime(From_DateTime, format="%d-%m-%Y %H:%M")
+    current_close_Time = pd.to_datetime(To_DateTime,   format="%d-%m-%Y %H:%M")
+    current_data = DATA[(DATA[datetime_name] >= current_open_Time) & (DATA[datetime_name] <= current_close_Time)].copy()
+    current_data.reset_index(drop=True, inplace=True)
+    if len(current_data) != 0:
+      current_Data = {"open" : float(current_data[open_name].iloc[0]), "high" : float(current_data[high_name].max()),
+                      "low" : float(current_data[low_name].min()), "close" : float(current_data[close_name].iloc[-1])}
+    else:
+      current_Data = {"open" : None, "high" : None, "low" : None, "close" : None}
+    return current_Data 
+
+# Example usage
+# DATA = Data.copy()
+# From_DateTime = "30-04-2025 09:00"
+# To_DateTime   = "30-04-2025 09:15"
+# Round_Minute = 5
+# Candle_Name = {"datetime" : "datetime", "open" : "fx_open", "high" : "fx_high", "low" : "fx_low", "close" : "fx_close", "datetime_format" : "%d-%m-%Y %H:%M",}
+# current_Data = get_ORB_Price(DATA, From_DateTime, To_DateTime, Candle_Name)
+# print(current_Data)
+#____________________________________________________________________________________________________________________________________________________________
