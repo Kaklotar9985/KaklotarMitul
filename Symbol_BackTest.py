@@ -828,6 +828,7 @@ def get_HeikinAshi_Columns(DATA, Round_Minute, Candle_Name = None):
 #____________________________________________________________________________________________________________________________________________________________
 
 # get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data  
+import json
 def get_Candle_Time_Data(DATA, DateTime, Candle_Name=None):
     try:
         if Candle_Name is None:
@@ -842,7 +843,7 @@ def get_Candle_Time_Data(DATA, DateTime, Candle_Name=None):
         if not Candle_data.empty:
             Candle_data[datetime_name] = Candle_data[datetime_name].dt.strftime(datetime_format)
             Candle_data.reset_index(drop=True, inplace=True)
-            return Candle_data
+            return Candle_data.iloc[0].to_dict()
         else:
             return None
     except Exception as e:
@@ -852,10 +853,8 @@ def get_Candle_Time_Data(DATA, DateTime, Candle_Name=None):
 # DATA = ATM_Data.copy()
 # DateTime = "01-01-2025 09:19"
 # Data = get_Candle_Time_Data(DATA, DateTime, Candle_Name = None)
-# print(Data) 
-# call_close = Data["call_close"].iloc[0]
-# put_close  = Data["put_close"].iloc[0]
-# print(call_close, put_close) 
-#_______________________________________________________________________________________________________________________________________________________________________ 
-
-
+# print(Data)
+# call_close = Data.get("call_close")
+# put_close  = Data.get("put_close")
+# print(call_close, put_close)
+#_______________________________________________________________________________________________________________________________________________________________________  
