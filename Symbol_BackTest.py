@@ -827,5 +827,32 @@ def get_HeikinAshi_Columns(DATA, Round_Minute, Candle_Name = None):
 # print(tabulate(Datas, headers="keys", tablefmt="pretty", showindex=False))
 #____________________________________________________________________________________________________________________________________________________________
 
+# get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data   get_Candle_Time_Data  
+def get_Candle_Time_Data(DATA, DateTime, Candle_Name=None):
+    try:
+        if Candle_Name is None:
+            Candle_Name = {"datetime": "datetime", "datetime_format": "%d-%m-%Y %H:%M"}
+        datetime_name = Candle_Name.get("datetime").lower()
+        datetime_format = Candle_Name.get("datetime_format")
+        DATA = pd.DataFrame(DATA)
+        DATA.columns = [col.lower() for col in DATA.columns]
+        DATA[datetime_name] = pd.to_datetime(DATA[datetime_name], format=datetime_format)
+        Candle_DateTime = pd.to_datetime(DateTime, format=datetime_format)
+        Candle_data = DATA[DATA[datetime_name] == Candle_DateTime].copy()
+        if not Candle_data.empty:
+            Candle_data[datetime_name] = Candle_data[datetime_name].dt.strftime(datetime_format)
+            Candle_data.reset_index(drop=True, inplace=True)
+            return Candle_data
+        else:
+            return None
+    except Exception as e:
+        print(f"get_Candle_Time_Data Function Error: {e}")
+        return None
+# Example usage
+# DATA = ATM_Data.copy()
+# DateTime = "01-01-2025 09:19"
+# Data = get_Candle_Time_Data(DATA, DateTime, Candle_Name = None)
+# print(Data)  
+#_______________________________________________________________________________________________________________________________________________________________________ 
 
 
