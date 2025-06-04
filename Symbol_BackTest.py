@@ -575,7 +575,7 @@ def Backtest_Positional_Function(Trade_No, DATA, Trade_Detail, DateTime_Detail, 
     
                     Trade_Data = {"Trade_No" : Trade_No, "Expiry_Date" : Expiry_Date, "Strike" : Strike_Price,"Options_Type" : Options_Type, "Transaction_Type": Transaction_Type,
                                   "Entry_DateTime" : Entry_DateTime.strftime("%d-%m-%Y %H:%M"), "Exit_DateTime" : datetime.strftime("%d-%m-%Y %H:%M"),
-                                  "Entry_Price" : round(Entry_Price,2), "Exit_Price" : round(Exit_Value,2), "Quantity" : int(Quantity), "Net_PNL" : round(Net_PNL,2),
+                                  "Entry_Price" : float(round(Entry_Price,2)), "Exit_Price" : float(round(Exit_Value,2)), "Quantity" : int(Quantity), "Net_PNL" : round(Net_PNL,2),
                                   "Brokerage" : round(Brokerage,2), "PNL" : round(PNL,2), "Note1" : Exit_Type, "Note2": Note2 }
     
                     Trade_List.append(Trade_Data)
