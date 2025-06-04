@@ -657,7 +657,50 @@ def get_Heikin_Ashi(prev_ha_open, prev_ha_close, current_open, current_high, cur
 # print(Heikin_Ashi)
 # output = {'ha_open': 331.0, 'ha_high': 336.3, 'ha_low': 331.0, 'ha_close': 332.95, 'ha_color': 'green'}
 #_______________________________________________________________________________________________________________________________
+
 # Candle_time  Candle_time   Candle_time   Candle_time   Candle_time   Candle_time   Candle_time   Candle_time   Candle_time   Candle_time   
+def get_Candle_time(date_str, round_to=5):
+    try:
+        try:
+            dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        except:
+            dt = datetime.strptime(date_str, "%d-%m-%Y %H:%M")
+
+        base_time = dt.replace(minute=0, second=0, microsecond=0)
+        total_seconds = (dt - base_time).total_seconds()
+        round_seconds = round_to * 60
+        rounded_seconds = (total_seconds // round_seconds) * round_seconds
+        new_dt = base_time + timedelta(seconds=rounded_seconds)
+        
+        current_close_dt= new_dt + timedelta( minutes = round_to - 1)
+        current_open_Time  = new_dt.strftime("%d-%m-%Y %H:%M")
+        current_Close_Time = current_close_dt.strftime("%d-%m-%Y %H:%M")
+        current_live_Time  = dt.strftime("%d-%m-%Y %H:%M")
+        
+        prev_open_dt       = new_dt - timedelta(minutes=round_to)
+        prev_close_dt      = prev_open_dt + timedelta(minutes=round_to - 1)
+        prev_open_Time     = prev_open_dt.strftime("%d-%m-%Y %H:%M")
+        prev_Close_Time    = prev_close_dt.strftime("%d-%m-%Y %H:%M")
+        
+        next_open_dt       = new_dt + timedelta(minutes=round_to)
+        next_close_dt      = next_open_dt + timedelta(minutes=round_to - 1)
+        next_open_Time     = next_open_dt.strftime("%d-%m-%Y %H:%M")
+        next_Close_Time    = next_close_dt.strftime("%d-%m-%Y %H:%M")
+
+        Data ={"current_Candle" : {"open_time" : current_open_Time, "close_time" : current_Close_Time, "live_Time" : current_live_Time },
+               "prev_Candle"    : {"open_time" : prev_open_Time,    "close_time" : prev_Close_Time  }, 
+               "next_Candle"    : {"open_time" : next_open_Time,    "close_time" : next_Close_Time  }, }
+        return Data 
+    except Exception as e:
+        print(f"Candle_time Function Error : {e}")
+        return None
+# Example usage
+# DateTime = "01-04-2025 09:28"
+# Round_Minute = 10
+# Data = get_Candle_time(DateTime, Round_Minute)
+# print(Data)
+
+'''
 def get_Candle_time(date_str, round_to=5):
     try:
         try:
@@ -690,6 +733,7 @@ def get_Candle_time(date_str, round_to=5):
 # Round_Minute = 10
 # Data = get_Candle_time(DateTime, Round_Minute)
 # print(Data)
+'''
 #_______________________________________________________________________________________________________________________________
 
 # Candle_Price   Candle_Price   Candle_Price   Candle_Price   Candle_Price   Candle_Price   Candle_Price   Candle_Price  
@@ -709,7 +753,7 @@ def get_Candle_Price(DATA, DateTime, Round_Minute, Candle_Name = None):
       
       Candle_time_Data   = get_Candle_time(DateTime, Round_Minute)
       current_open_Time  = pd.to_datetime(Candle_time_Data["current_Candle"]["open_time"], format="%d-%m-%Y %H:%M")
-      current_close_Time = pd.to_datetime(Candle_time_Data["current_Candle"]["close_time"], format="%d-%m-%Y %H:%M")
+      current_close_Time = pd.to_datetime(Candle_time_Data["current_Candle"]["live_Time"], format="%d-%m-%Y %H:%M")  #  Check
       prev_open_Time     = pd.to_datetime(Candle_time_Data["prev_Candle"]["open_time"], format="%d-%m-%Y %H:%M")
       prev_close_Time    = pd.to_datetime(Candle_time_Data["prev_Candle"]["close_time"], format="%d-%m-%Y %H:%M")
       
