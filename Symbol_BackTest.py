@@ -852,7 +852,10 @@ def get_Candle_Time_Data(DATA, DateTime, Candle_Name=None):
 # DATA = ATM_Data.copy()
 # DateTime = "01-01-2025 09:19"
 # Data = get_Candle_Time_Data(DATA, DateTime, Candle_Name = None)
-# print(Data)  
+# print(Data) 
+# call_close = Data["call_close"].iloc[0]
+# put_close  = Data["put_close"].iloc[0]
+# print(call_close, put_close) 
 #_______________________________________________________________________________________________________________________________________________________________________ 
 
 
