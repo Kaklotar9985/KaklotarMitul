@@ -458,22 +458,22 @@ def Backtest_Positional_Function(Trade_No, DATA, Trade_Detail, DateTime_Detail, 
         StopLoss_Percent  = Exit_Logic["StopLoss"]
         Target_Percent    = Exit_Logic["Target"]
         TSL_Percent       = Exit_Logic["TSL"]
-    
+
         StopLoss_condition = ( int(StopLoss_Percent) != 0 )
         Target_condition   = ( int(Target_Percent)   != 0 )
         TSL_condition      = ( int(TSL_Percent)      != 0 )
-    
-    
+
+
         Max_ReEntry = int(max(Exit_Logic["Re_Entry"], 1))
         ReEntry = 0
-    
+
         while ReEntry < Max_ReEntry:
             DATA.columns = [col.lower() for col in DATA.columns]
             DATA['datetime'] = pd.to_datetime(DATA['datetime'], format="%d-%m-%Y %H:%M")
             DATA = DATA[DATA['datetime'] >= Entry_DateTime].copy()
             if Entry_Price is None:
                Entry_Price = DATA[f'{Options_Type.lower()}_open'].iloc[0]    #round(float(Entry_Price),2)
-    
+
             # Calculate StopLoss, Target, and TSL_Point based on Exit_Logic
             if Transaction_Type.lower() == "sell":
                 if StopLoss_condition:
@@ -489,13 +489,14 @@ def Backtest_Positional_Function(Trade_No, DATA, Trade_Detail, DateTime_Detail, 
                    Target = round(Entry_Price * (1 + Target_Percent/100), 2)
                 if TSL_condition:
                    TSL_Point = round(Entry_Price * (TSL_Percent/100), 2)
-    
+
             if StopLoss_condition:
                Exit_Value = StopLoss
                Exit_Type  = "StopLoss"
-            TSL_No     = 1
+
+            TSL_No = 1
             Exit_Time  = None
-    
+
             for i in range(len(DATA)):
                 datetime     = pd.to_datetime(str(DATA['datetime'].iloc[i]), format="%Y-%m-%d %H:%M:%S")
                 date         = datetime.strftime("%d-%m-%Y")
@@ -509,43 +510,43 @@ def Backtest_Positional_Function(Trade_No, DATA, Trade_Detail, DateTime_Detail, 
                   Strike_Price = int(DATA['strike_price'].iloc[i])
                 except:
                   Strike_Price = 0
-    
+
                 Expiry_Exit_Time = pd.to_datetime(Exit_DateTime, format="%d-%m-%Y %H:%M") if Exit_DateTime else pd.to_datetime(f"{Expiry_Date} 15:28", format="%d-%m-%Y %H:%M")
                 Trading_Start_Time     = pd.to_datetime(f"{date} {Trading_StartTime}", format="%d-%m-%Y %H:%M")
                 Trading_End_Time       = pd.to_datetime(f"{date} {Trading_EndTime}", format="%d-%m-%Y %H:%M")
                 Trading_Time_condition = (datetime >= Trading_Start_Time) & (datetime <= Trading_End_Time)
-    
-    
+
+
                 if Transaction_Type.lower() == "sell":
                     exit_condition = (datetime >= Expiry_Exit_Time) or \
                                      (StopLoss_condition and (high >= Exit_Value)) or \
                                      (Target_condition and (low  <= Target))
-                    TSL_condition  = (TSL_condition and (Exit_Value - (TSL_Point * 2)) >= low)
+                    TSL_conditions  = (TSL_condition and (Exit_Value - (TSL_Point * 2)) >= low)
                 elif Transaction_Type.lower() == "buy":
                     exit_condition = (datetime >= Expiry_Exit_Time) or \
                                      (StopLoss_condition and (low <= Exit_Value)) or \
                                      (Target_condition and (high >= Target) )
-                    TSL_condition  = (TSL_condition and (Exit_Value + (TSL_Point * 2)) <= high)
-    
+                    TSL_conditions  = (TSL_condition and (Exit_Value + (TSL_Point * 2)) <= high)
+
                 # print(datetime,TSL_condition)
                 if Exit_Time is None and exit_condition and Trading_Time_condition :
                     Exit_Time = datetime
-    
+
                     Morning_condition_Target   = ( Exit_Time == Trading_Start_Time ) and (
                                                  (Target_condition and Transaction_Type.lower() == "sell" and open <= Target) or
                                                  (Target_condition and Transaction_Type.lower() == "buy"  and open >= Target) )
-    
+
                     Morning_condition_StopLoss = ( Exit_Time == Trading_Start_Time ) and (
                                                  (StopLoss_condition and Transaction_Type.lower() == "sell" and open >= StopLoss) or
                                                  (StopLoss_condition and Transaction_Type.lower() == "buy"  and open <= StopLoss) )
-    
+
                     if Morning_condition_StopLoss:
                         Exit_Value = open
                         Exit_Type  = "Morning_StopLoss"
                     elif Morning_condition_Target:
                         Exit_Value = open
                         Exit_Type  = "Morning_Target"
-    
+
                     if not (Morning_condition_StopLoss or Morning_condition_Target):
                        if Target_condition and Transaction_Type.lower() == "sell" and low <= Target:
                           Exit_Type  = "Target"
@@ -553,13 +554,13 @@ def Backtest_Positional_Function(Trade_No, DATA, Trade_Detail, DateTime_Detail, 
                        elif Target_condition and Transaction_Type.lower() == "buy" and high >= Target:
                           Exit_Type  = "Target"
                           Exit_Value = Target
-    
+
                     if datetime == Expiry_Exit_Time:
                         Exit_Type = "DateTime"
                         Exit_Value = close
                         if Exit_Time == pd.to_datetime(f"{Expiry_Date} 15:25", format="%d-%m-%Y %H:%M"):
                            Exit_Type = "Expiry"
-    
+
                     if Entry_Price is not None and Exit_Value is not None:
                         if Transaction_Type.lower() == "buy":
                             Net_PNL = round((float(Exit_Value) - float(Entry_Price)) * Quantity, 2)
@@ -569,39 +570,38 @@ def Backtest_Positional_Function(Trade_No, DATA, Trade_Detail, DateTime_Detail, 
                             Brokerage = Brokerage_Calculate(float(Exit_Value), float(Entry_Price), Quantity, Options_Type)
                         else:
                             raise ValueError("Invalid Transaction_Type. Use 'buy' or 'sell'.")
-    
+
                     PNL = round(Net_PNL - Brokerage, 2)
-    
-    
+
+
                     Trade_Data = {"Trade_No" : Trade_No, "Expiry_Date" : Expiry_Date, "Strike" : Strike_Price,"Options_Type" : Options_Type, "Transaction_Type": Transaction_Type,
                                   "Entry_DateTime" : Entry_DateTime.strftime("%d-%m-%Y %H:%M"), "Exit_DateTime" : datetime.strftime("%d-%m-%Y %H:%M"),
                                   "Entry_Price" : float(round(Entry_Price,2)), "Exit_Price" : float(round(Exit_Value,2)), "Quantity" : int(Quantity), "Net_PNL" : round(Net_PNL,2),
                                   "Brokerage" : round(Brokerage,2), "PNL" : round(PNL,2), "Note1" : Exit_Type, "Note2": Note2 }
-    
+
                     Trade_List.append(Trade_Data)
                     break  # Exit the loop as trade is closed
-    
-                elif TSL_condition:
+
+                if TSL_conditions:
                     if Transaction_Type.lower() == "sell":
                         Exit_Value = round(Exit_Value - TSL_Point, 2)
                     elif Transaction_Type.lower() == "buy":
                         Exit_Value = round(Exit_Value + TSL_Point, 2)
                     Exit_Type = f"TSL_{TSL_No}"
                     TSL_No += 1
-    
             # Re-entry logic after exit
             if Trade_List:
                last_trade = Trade_List[-1]
                Re_Entry_DateTime = pd.to_datetime(last_trade["Exit_DateTime"], format="%d-%m-%Y %H:%M")
                Re_Entry_EndTime  = pd.to_datetime(f"{Entry_Date} 15:30", format="%d-%m-%Y %H:%M")
-    
+
                if Re_Entry_DateTime.strftime("%d-%m-%Y") == Entry_Date:
                   DATA_reentry = DATA[(DATA['datetime'] > Re_Entry_DateTime) & (DATA['datetime'] <= Re_Entry_EndTime)]
                   for i in range(len(DATA_reentry)):
                       Re_high = DATA_reentry[f'{Options_Type}_high'].iloc[i]
                       Re_low = DATA_reentry[f'{Options_Type}_low'].iloc[i]
                       Re_datetime = DATA_reentry['datetime'].iloc[i]
-    
+
                         # Check if price crosses original entry price
                       if (Transaction_Type == "sell" and Re_high >= Entry_Price and Re_low  <= Entry_Price) or \
                          (Transaction_Type == "buy"  and Re_low  <= Entry_Price and Re_high >= Entry_Price) :
@@ -617,13 +617,11 @@ def Backtest_Positional_Function(Trade_No, DATA, Trade_Detail, DateTime_Detail, 
                    ReEntry = Max_ReEntry
             else:
                 ReEntry = Max_ReEntry
-    
+
         return Trade_List
     except Exception as e:
         print(f"Backtest_Positional_Function Function Error : {e}")
         return None
-
-
 #___________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 from decimal import Decimal, ROUND_HALF_UP
