@@ -76,7 +76,7 @@ def get_Symbol_Expiry(Dates, Symbol, Expiry_Period, Expiry_Type):
 # Symbol         = "naturalgas" # nifty  banknifty  naturalgas
 # Expiry_Period  = "Monthly"  # "Weekiy" , "Monthly" 
 # Expiry_Type    = "Current"  # "Current", "Next"
-# Expirys        = get_Expiry(Dates, Symbol, Expiry_Period, Expiry_Type)
+# Expirys        = get_Symbol_Expiry(Dates, Symbol, Expiry_Period, Expiry_Type)
 # print(Expirys)
 #________________________________________________________________________________________________________________________________________________________
 
