@@ -929,3 +929,33 @@ def My_Position(CE_Detail,PE_Detail):
 # # उदाहरण के लिए
 # print(tabulate(My_Position(CE_Detail,PE_Detail), headers='keys', tablefmt='pretty', showindex=False))
 #_________________________________________________________________________________________________________________________________________________________________
+import json
+# get_json_Save  get_json_Save  get_json_Save  get_json_Save  get_json_Save  get_json_Save  get_json_Save  get_json_Save  get_json_Save  get_json_Save 
+def get_json_Save(Data,File_Name):
+    try:
+        Path = f"/content/drive/MyDrive/LiveOuto_Data/{File_Name}.json"
+        with open(Path, "w") as f:
+            json.dump(Data, f, indent=4)
+    except Exception as e:
+        print(f"get_json_Save function Error: {e}")
+        return None
+# # उदाहरण के लिए
+# Data = PE_Detail
+# File_Name = "PE_Detail"
+# get_json_Save(Data,File_Name)
+#_______________________________________________________________________________________________________________________________________________
+
+# get_json_Read  get_json_Read  get_json_Read  get_json_Read  get_json_Read  get_json_Read  get_json_Read  get_json_Read  get_json_Read  get_json_Read 
+def get_json_Read(File_Name):
+    try:
+        Path = f"/content/drive/MyDrive/LiveOuto_Data/{File_Name}.json"
+        with open(Path, "r") as f:
+              return json.load(f)
+    except Exception as e:
+        print(f"get_json_Read function Error: {e}")
+        return None
+# # उदाहरण के लिए     
+# File_Name = "PE_Detail"
+# Data = get_json_Read(File_Name)
+# print(Data)
+#_______________________________________________________________________________________________________________________________________________
