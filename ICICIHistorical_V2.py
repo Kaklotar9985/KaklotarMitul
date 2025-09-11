@@ -103,9 +103,8 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                 right_Data = breeze.get_historical_data_v2(interval=interval, from_date=from_date, to_date=to_date, stock_code=stock_code,
                     exchange_code=exchange_code, product_type=product_type,  expiry_date=expiry_date_api, right=right, strike_price=strike_price )
                 
-                clear_output(wait=True)
-                print(f"Fetching options data: {i+1}/{len(date_list)} - Date: {Dates}", 
-                      f"Strike: {strike_price}", f"Right: {right}")
+                # clear_output(wait=True)
+                # print(f"Fetching options data: {i+1}/{len(date_list)} - Date: {Dates}", f"Strike: {strike_price}", f"Right: {right}")
                 
                 if right_Data["Error"] is None and right_Data["Success"]:
                     Options_Type = right
