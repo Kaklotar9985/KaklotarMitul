@@ -158,7 +158,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
             Analysis_Data["datetime"] = Analysis_Data["datetime"].dt.strftime('%d-%m-%Y %H:%M')
             Analysis_Data["expiry_date"] = Analysis_Data["expiry_date"].dt.strftime('%d-%m-%Y')
             
-            clear_output(wait=True)
+            # clear_output(wait=True)
             return Analysis_Data
         else:
             print("No data fetched. Check parameters or API connection.")
