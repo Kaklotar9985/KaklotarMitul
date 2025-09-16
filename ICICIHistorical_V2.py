@@ -31,11 +31,20 @@ def Error_Data_to_Excel(filename="Error_Data"):
             for strike, errors in strikes.items():
                 for dt, err in errors.items():
                     rows.append([expiry, strike, dt, err])
+
         if not rows:
             print("⚠️ Error_Data khali hai, Excel file nahi bani.")
             return
+
+        # DataFrame banao
         df = pd.DataFrame(rows, columns=["Expiry_Date", "Strike_Price", "Error_Datetime", "Error"])
         df = df.sort_values(by=["Expiry_Date", "Strike_Price", "Error_Datetime"])
+
+        # "All Date" filtering logic
+        all_date_strikes = df.loc[df["Error_Datetime"] == "All Date", "Strike_Price"].unique()
+
+        filtered_data = df[ (df["Strike_Price"].isin(all_date_strikes) & (df["Error_Datetime"] == "All Date")) |
+                            (~df["Strike_Price"].isin(all_date_strikes))  ].reset_index(drop=True)
 
         # folder banana (agar exist nahi karta to)
         folder = os.path.dirname(filename)
@@ -43,12 +52,11 @@ def Error_Data_to_Excel(filename="Error_Data"):
             os.makedirs(folder)
 
         filename = f"{filename}_Error.xlsx"
-        df.to_excel(filename, sheet_name="ErrorLogs", index=False)
+        filtered_data.to_excel(filename, sheet_name="ErrorLogs", index=False)
         print(f"✅ Error data Excel me save ho gaya: {filename}")
 
         # Clear dict after saving
         Error_Data.clear()
-        # return_Name = f"{filename}_Error.xlsx"
         return filename
 
     except Exception as e:
