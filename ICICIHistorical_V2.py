@@ -525,3 +525,54 @@ def make_zip(Downlod_File_List, Expiry_Date, base_path="/content"):
 #     from google.colab import files
 #     files.download(zip_file)
 #=======================================================================================================================================================================
+
+
+
+
+
+
+
+
+'''
+
+exchange_code = "NFO"
+stock_name    = "Nifty" # RELIANCE  Nifty
+interval      = "1minute"
+past_day      = 1
+Strike_Gep    = 50
+Plus_Minus_strike = 1
+Expiry_Date   = '24-04-2025'
+
+strike_list = get_strike_list(breeze, stock_name, Expiry_Date, past_day, Strike_Gep, Plus_Minus_strike)
+Downlod_File_List = []
+for strike_price in strike_list:
+    Data = Fetch_Historical_Data ( breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day)
+    if Data is not None:
+       os.makedirs(Expiry_Date, exist_ok=True)   # ✅ folder bana dega agar missing hai
+       strike_name = strike_price if strike_price != 0 else "futures"
+       CSV_Name = os.path.join(Expiry_Date, f"{Expiry_Date}_{strike_name}.csv")
+       Data.to_csv(CSV_Name, index=False)
+       Downlod_File_List.append(f"{Expiry_Date}_{strike_name}.csv")
+       clear_output(wait=True)
+       print(f"Total Strike: {len(strike_list)} /",len(strike_list) - len(Downlod_File_List), "Strike Left")
+
+
+Excel_Name = os.path.join(Expiry_Date, f"{Expiry_Date}_Error")
+filename = Error_Data_to_Excel(Excel_Name)
+if filename:
+   Downlod_File_List.append(filename)
+
+if Downlod_File_List:
+   zip_filename = f'/content/{Expiry_Date}.zip'
+   with zipfile.ZipFile(zip_filename, 'w') as zipf:
+      for file in Downlod_File_List:
+          zipf.write(os.path.join(f'/content/{Expiry_Date}', file), arcname=file)
+   # Provide download link for the zip file
+   from google.colab import files
+   files.download( zip_filename )
+
+
+print(Downlod_File_List)
+# print(tabulate(Data.head(5), headers='keys', tablefmt='pretty', showindex=False))
+
+'''
