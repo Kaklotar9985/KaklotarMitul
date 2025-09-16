@@ -144,7 +144,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
             #     exchange_code=exchange_code, product_type=product_type,  expiry_date=expiry_date_api, right=right, strike_price=strike_price )
 
             right_Data = safe_get_historical_data( breeze, interval, from_date_api, to_date_api, stock_code,
-                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=3, delay=1 )
+                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=2, delay=1 )
 
             if right_Data["Error"] is None and right_Data["Success"]:
                 if product_type == "futures":
@@ -200,7 +200,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                 #     exchange_code=exchange_code, product_type=product_type,  expiry_date=expiry_date_api, right=right, strike_price=strike_price )
 
                 right_Data = safe_get_historical_data( breeze, interval, from_date, to_date, stock_code,
-                    exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=3, delay=1 )
+                    exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=2, delay=1 )
 
                 if right_Data["Error"] is None and right_Data["Success"]:
                     Column = ["stock_code", "expiry_date", "strike_price", "datetime", f"{Options_Type}_open",
