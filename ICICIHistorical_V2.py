@@ -427,12 +427,12 @@ def get_strike_list(breeze, stock_name, expiry_date, past_days, strike_gap,Plus_
             return sorted(strike_list)
         else:
             Error_msg    = "get_strike_list Error"
-            Data_Error(Error_msg, Expiry_Date, "No", "No")
+            Data_Error(Error_msg, expiry_date, "No", "No")
             print(f"No historical data found for {stock_name}")
             return None
     except Exception as e:
         Error_msg    = "get_strike_list Error"
-        Data_Error(Error_msg, Expiry_Date, "No", "No")
+        Data_Error(Error_msg, expiry_date, "No", "No")
         print(f"Error generating strike list: {e}")
         return None
 
