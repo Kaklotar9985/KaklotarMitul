@@ -233,7 +233,9 @@ def process_trade(Data, i, New_Quantity=0):
           PNL         = round(Net_PNL - Brokerage,2)
 
           Expiry_Weekiy_Current  = get_Expiry(P_Date, "Nifty", "Weekiy", "Current")
-          Expiry_Monthly_Current = get_Expiry(P_Date, "Nifty", "Monthly", "Current")
+          Expiry_Weekiy_Next  = get_Expiry(P_Date, "Nifty", "Weekiy", "Next")
+          Expiry_Monthly_Current = get_Expiry(P_Date, "Nifty", "Monthly", "Current") 
+          
           Weekly_No              = get_weekly_number(P_Date)
           Day_No                 = get_Day_number(P_Date)
 
@@ -246,7 +248,7 @@ def process_trade(Data, i, New_Quantity=0):
           Datas = {"Entry_DateTime": (P_Date+" "+P_Time), "Exit_DateTime":(Date+" "+Time),"Instrument" : Instrument,
                   "Strike" : Strike , "option" : option, "BuySell" : P_BuySell,"Quantity" : QTY, "Entry_Price" : Entry_Price,
                   "Exit_Price" : Exit_Price, "Net_PNL" : Net_PNL, "Brokerage" : Brokerage, "PNL" : PNL, "Trigger_type" : Trigger_type,
-                  "Expiry_Weekiy_Current" : Expiry_Weekiy_Current, "Expiry_Monthly_Current": Expiry_Monthly_Current,
+                  "Expiry_Weekiy_Current" : Expiry_Weekiy_Current, "Expiry_Weekiy_Next" : Expiry_Weekiy_Next, "Expiry_Monthly_Current": Expiry_Monthly_Current,
                   "Weekly_No" : Weekly_No, "Day_No" : Day_No, "Day": Day, "Month": Month, "Quarter": Quarter, "Year": Year }
           return Datas
     except Exception as e:
