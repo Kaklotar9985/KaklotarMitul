@@ -281,8 +281,8 @@ def process_Analysis_Data(Data_List,Backtest_Name):
                             aggfunc="sum", fill_value=0, margins=True, margins_name="Grand Total" )
       # Save cleaned file
       File_Name = f"{Backtest_Name}.xlsx"
-      File_Name2 = f"{Backtest_Name}.csv"
-      Data.to_csv(File_Name2, index=False)
+      # File_Name2 = f"{Backtest_Name}.csv"
+      # Data.to_csv(File_Name2, index=False)
       with pd.ExcelWriter(File_Name) as writer:
           Analysis_Data.to_excel(writer, sheet_name="Analysis_Data", index=False)
           pivot_yearly.to_excel(writer, sheet_name="Yearly_No")
