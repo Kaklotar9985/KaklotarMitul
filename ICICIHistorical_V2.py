@@ -534,6 +534,38 @@ def make_zip(Downlod_File_List, Expiry_Date, base_path="/content"):
 #     files.download(zip_file)
 #=======================================================================================================================================================================
 
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  run_with_progress   download_strike     run_with_progress   download_strike     run_with_progress   download_strike      run_with_progress   download_strike    run_with_progress   
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+import telebot
+# Bot को सिर्फ एक बार initialize करें (global)
+BOT_TOKEN = '7591009372:AAEkZFnOZ1UyqxQgiTSJVqKqr1uvPP5KqPI'
+bot = telebot.TeleBot(BOT_TOKEN)
+Tel_Candal_Data_ID  = "-1002257377003"
+Tel_JB_Sons_ID      = "-1002263632329"
+Tel_Jay_Mataji_ID   = '1170793375'
+CHAT_ID = Tel_Jay_Mataji_ID
+def Telegram_Message(*args, file_path=None):
+    try:
+        # अगर text है तो पहले भेजो
+        if args:
+            message = "\n".join(filter(None, args))
+            bot.send_message(CHAT_ID, message)
+
+        # अगर file है तो भेजो
+        if file_path:
+            with open(file_path, "rb") as f:
+                bot.send_document(CHAT_ID, f)
+
+        print("✅ Message/File sent successfully!")
+
+    except Exception as e:
+        print("❌ Telegram_Message Error:", e)
+
+# Example
+# Telegram_Message("HI Bhai", file_path="/content/JB Sons 5M CE-0 PE-1 QTY0  (1).csv")
+#=======================================================================================================================================================================
+
 
 
 
@@ -542,45 +574,91 @@ def make_zip(Downlod_File_List, Expiry_Date, base_path="/content"):
 
 
 '''
+#_______________________________________________________________________________________________________
+!pip install breeze-connect
+!pip install telebot
+#_______________________________________________________________________________________________________
 
+from importlib import import_module, reload, invalidate_caches
+from datetime import datetime, timedelta
+from IPython.display import clear_output
+from tabulate import tabulate
+import pandas as pd
+import threading
+import requests
+import zipfile
+import sys
+import os
+
+def Import_File(import_name):
+    try:
+        path = f"/content/importFile/{import_name}.py"
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        url = f"https://raw.githubusercontent.com/Kaklotar9985/KaklotarMitul/main/{import_name}.py"
+        response = requests.get(url)
+        response.raise_for_status()
+        with open(path, "wb") as file:
+            file.write(response.content)
+        module_dir = os.path.dirname(path)
+        if module_dir not in sys.path:
+            sys.path.append(module_dir)
+        invalidate_caches()  # importlib कैश साफ़ करें
+        if import_name in sys.modules:
+            del sys.modules[import_name]
+        imported_module = import_module(import_name)
+        reload(imported_module)
+        print(f"✅ Imported & Reloaded: {import_name}")
+        print("📦 Available Attributes:", dir(imported_module))
+        return imported_module
+    except Exception as e:
+        print(f"Import_File Function Error: {e}")
+        return None
+
+# यूज़ उदाहरण:
+ICICI = Import_File("ICICIHistorical_V2")
+
+import urllib
+APIKEY    = "69162e_0=09u812m845534f1UYw8p27T"
+SecretKey = "C98)12W9xS`13y1871&031PQ83+m8c40"
+TOTP      = "GJ2EW5K2N5UGKY3BINBFQ42KJE"
+UserID    = "7817857533"
+Password  = "9904953138mk"
+print("https://api.icicidirect.com/apiuser/login?api_key="+urllib.parse.quote_plus(APIKEY))
+#__________________________________________________________________________________________________
+from breeze_connect import BreezeConnect
+import logging
+session_token = "53150902"
+breeze = BreezeConnect(api_key=APIKEY)
+breeze.generate_session(api_secret=SecretKey, session_token=session_token)
+# Disable Breeze API debug logs
+logging.getLogger("APILogger").setLevel(logging.CRITICAL)
+
+#_______________________________________________________________________________________________________
 exchange_code = "NFO"
-stock_name    = "Nifty" # RELIANCE  Nifty
-interval      = "1minute"
-past_day      = 1
-Strike_Gep    = 50
-Plus_Minus_strike = 1
-Expiry_Date   = '24-04-2025'
+stock_name = "Nifty"
+interval = "1minute"
+past_day = 60
+Strike_Gep = 50
+Plus_Minus_strike = 20
+progress_speed = 3
 
-strike_list = get_strike_list(breeze, stock_name, Expiry_Date, past_day, Strike_Gep, Plus_Minus_strike)
-Downlod_File_List = []
-for strike_price in strike_list:
-    Data = Fetch_Historical_Data ( breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day)
-    if Data is not None:
-       os.makedirs(Expiry_Date, exist_ok=True)   # ✅ folder bana dega agar missing hai
-       strike_name = strike_price if strike_price != 0 else "futures"
-       CSV_Name = os.path.join(Expiry_Date, f"{Expiry_Date}_{strike_name}.csv")
-       Data.to_csv(CSV_Name, index=False)
-       Downlod_File_List.append(f"{Expiry_Date}_{strike_name}.csv")
-       clear_output(wait=True)
-       print(f"Total Strike: {len(strike_list)} /",len(strike_list) - len(Downlod_File_List), "Strike Left")
+# Expiry_Date = '29-02-2024'
+Expiry_Date_List = ['09-04-2025', '17-04-2025', '24-04-2025', '30-04-2025', '08-05-2025', '15-05-2025', '22-05-2025', '29-05-2025', '05-06-2025', '12-06-2025', '19-06-2025', '26-06-2025', '03-07-2025', '10-07-2025', '17-07-2025', '24-07-2025','31-07-2025', '07-08-2025', '14-08-2025', '21-08-2025', '28-08-2025', ]
 
+for Expiry_Date in Expiry_Date_List:
+    strike_list = ICICI.get_strike_list(breeze, stock_name, Expiry_Date, past_day, Strike_Gep, Plus_Minus_strike) # strike_list = [1030,1020]
+    Downlod_File_List = ICICI.run_with_progress(strike_list, breeze, exchange_code, stock_name, interval, Expiry_Date, past_day, progress_speed)
 
-Excel_Name = os.path.join(Expiry_Date, f"{Expiry_Date}_Error")
-filename = Error_Data_to_Excel(Excel_Name)
-if filename:
-   Downlod_File_List.append(filename)
+    Excel_Name = os.path.join(Expiry_Date, Expiry_Date)
+    filename = ICICI.Error_Data_to_Excel(Excel_Name)
+    if filename:
+      Downlod_File_List.append(filename)
 
-if Downlod_File_List:
-   zip_filename = f'/content/{Expiry_Date}.zip'
-   with zipfile.ZipFile(zip_filename, 'w') as zipf:
-      for file in Downlod_File_List:
-          zipf.write(os.path.join(f'/content/{Expiry_Date}', file), arcname=file)
-   # Provide download link for the zip file
-   from google.colab import files
-   files.download( zip_filename )
-
-
-print(Downlod_File_List)
-# print(tabulate(Data.head(5), headers='keys', tablefmt='pretty', showindex=False))
+    zip_file = ICICI.make_zip(Downlod_File_List, Expiry_Date)
+    if zip_file:
+        threading.Thread(target=Telegram_Message,args=(zip_file,),kwargs={"file_path": zip_file}, daemon=True ).start()
+        from google.colab import files
+        files.download(zip_file)
+#_______________________________________________________________________________________________________
 
 '''
