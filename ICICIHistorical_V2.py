@@ -503,35 +503,54 @@ def run_with_progress(strike_list, breeze, exchange_code, stock_name, interval, 
 #  run_with_progress   download_strike     run_with_progress   download_strike     run_with_progress   download_strike      run_with_progress   download_strike    run_with_progress   
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 import os, zipfile
-def make_zip(Downlod_File_List, Expiry_Date, base_path="/content"):
+def make_zip(Expiry_Date, base_path="/content", method="best", Downlod_File_List=None):
     try:
+        folder_path = os.path.join(base_path, Expiry_Date)
+        # अगर file list नहीं दी तो पूरे folder से ले लो
+        if not Downlod_File_List:
+            if not os.path.exists(folder_path):
+                print(f"⚠️ Folder नहीं मिला: {folder_path}")
+                return None
+            Downlod_File_List = os.listdir(folder_path)
         if not Downlod_File_List:
             print("⚠️ कोई file नहीं मिली, Zip create नहीं होगा")
             return None
-        zip_filename = os.path.join(base_path, f"{Expiry_Date}.zip")
-        with zipfile.ZipFile(zip_filename, 'w') as zipf:
-            for file in Downlod_File_List:
-                # Check if file already has full/relative path
-                full_path = os.path.join(base_path, file) if os.path.exists(os.path.join(base_path, file)) \
-                            else os.path.join(base_path, Expiry_Date, file)
 
-                arcname = os.path.basename(file)  # सिर्फ filename zip के अंदर रहेगा
+        # Compression method select करो
+        if method == "fast":
+            compression = zipfile.ZIP_DEFLATED   # Fast + अच्छा compression
+            compresslevel = 9
+        elif method == "best":
+            compression = zipfile.ZIP_LZMA       # Best compression (Slow)
+            compresslevel = None
+        else:
+            print(f"⚠️ Unknown method '{method}', defaulting to fast")
+            compression = zipfile.ZIP_DEFLATED
+            compresslevel = 9
+        zip_filename = os.path.join(base_path, f"{Expiry_Date}.zip")
+        # compresslevel सिर्फ ZIP_DEFLATED के लिए valid है
+        if compresslevel:
+            zipf = zipfile.ZipFile(zip_filename, 'w', compression=compression, compresslevel=compresslevel)
+        else:
+            zipf = zipfile.ZipFile(zip_filename, 'w', compression=compression)
+        with zipf:
+            for file in Downlod_File_List:
+                full_path = os.path.join(folder_path, file)
                 if os.path.exists(full_path):
-                    zipf.write(full_path, arcname=arcname)
+                    zipf.write(full_path, arcname=os.path.basename(file))
                 else:
                     print(f"⚠️ File missing: {full_path}")
-
         print(f"✅ Zip created: {zip_filename}")
         return zip_filename
     except Exception as e:
         print(f"Error creating zip: {e}")
         return None
 
-# # Example usage
-# zip_file = make_zip(Downlod_File_List, Expiry_Date)
-# if zip_file:
-#     from google.colab import files
-#     files.download(zip_file)
+
+# Example Run
+# Expiry_Date = "09-04-2025"
+# zip_file = make_zip(Expiry_Date)
+# print(zip_file)
 #=======================================================================================================================================================================
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
