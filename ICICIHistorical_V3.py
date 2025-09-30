@@ -114,6 +114,10 @@ def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code, e
                 return right_Data  # ✅ Success mil gaya
             elif right_Data.get("Error") == "Rate Limit Exceeded" :
                  time.sleep(120)
+            elif right_Data.get("Error") == "API did not return any response" :
+                 break
+            elif right_Data.get("Error") is None :
+                 break  
             else:
                 attempt += 1
                 if attempt < max_retries:
@@ -150,7 +154,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
             to_date_api = End_Date.strftime("%Y-%m-%dT00:00:00.000Z")
 
             right_Data = safe_get_historical_data( breeze, interval, from_date_api, to_date_api, stock_code,
-                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=2, delay=1 )
+                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=10, delay=1 )
 
             if right_Data["Error"] is None and right_Data["Success"]:
                 if product_type == "futures":
@@ -188,10 +192,8 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                 from_date_api = (Start_Date  - timedelta(days=5)).strftime("%Y-%m-%dT00:00:00.000Z")
                 to_date_api   = current_to.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
-                right_Data = safe_get_historical_data(
-                    breeze, interval, from_date_api, to_date_api, stock_code,
-                    exchange_code, product_type, expiry_date_api, right, strike_price,
-                    max_retries=2, delay=00)
+                right_Data = safe_get_historical_data(breeze, interval, from_date_api, to_date_api, stock_code,
+                    exchange_code, product_type, expiry_date_api, right, strike_price, max_retries=10, delay=00)
 
                 Error   = right_Data.get("Error")
                 Success = right_Data.get("Success")
