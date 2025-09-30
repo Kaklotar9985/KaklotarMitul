@@ -112,11 +112,13 @@ def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code, e
                          exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date_api, right=right, strike_price=strike_price)
             if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
                 return right_Data  # ✅ Success mil gaya
-            # Agar error mila toh retry
-            attempt += 1
-            if attempt < max_retries:
-                # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
-                time.sleep(delay)
+            elif right_Data.get("Error") == "Rate Limit Exceeded" :
+                 time.sleep(120)
+            else:
+                attempt += 1
+                if attempt < max_retries:
+                    # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
+                    time.sleep(delay)
         except Exception as e:
             attempt += 1
             print(f"⚠️ Exception on attempt {attempt}: {e}")
