@@ -142,7 +142,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
         End_Date = min(Expiry_Date, ToDate)  + timedelta(days=1)
         Start_Date = End_Date - timedelta(days=past_day)
         Start_Date = Start_Date.replace(hour=9, minute=15, second=0)
-
+        expiry_date_api = Expiry_Date.strftime("%Y-%m-%dT00:00:00.000Z")
         if product_type in ("futures", "cash"):
             from_date_api = Start_Date.strftime("%Y-%m-%dT00:00:00.000Z")
             to_date_api = End_Date.strftime("%Y-%m-%dT00:00:00.000Z")
