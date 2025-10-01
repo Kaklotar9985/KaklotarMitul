@@ -102,34 +102,64 @@ from tabulate import tabulate
 from dateutil import parser
 import pandas as pd
 import time
+import threading
 
-def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date_api, right, strike_price,
+# Global Rate Limiter
+lock = threading.Lock()
+CALL_LIMIT = 95        # Breeze limit ~100 per minute, थोड़ा buffer रख रहे हैं
+WINDOW = 60            # seconds (1 minute)
+call_times = []
+
+def rate_limiter():
+    global call_times
+    with lock:
+        now = time.time()
+        # Purane 60s ke calls hatao
+        call_times = [t for t in call_times if now - t < WINDOW]
+
+        if len(call_times) >= CALL_LIMIT:
+            wait_time = WINDOW - (now - call_times[0])
+            # print(f"⚠️ Rate limit reached! Waiting {wait_time:.2f}s...")
+            time.sleep(wait_time)
+
+        call_times.append(time.time())
+
+def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code,
+                             exchange_code, product_type, expiry_date_api, right, strike_price,
                              max_retries=2, delay=1):
     attempt = 0
-    while attempt < max_retries:  # 
+    right_Data = None
+    while attempt < max_retries:
         try:
-            right_Data = breeze.get_historical_data_v2( interval=interval, from_date=from_date, to_date=to_date, stock_code=stock_code,
-                         exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date_api, right=right, strike_price=strike_price)
+            rate_limiter()  # ✅ पहले limit check करो
+
+            right_Data = breeze.get_historical_data_v2(
+                interval=interval, from_date=from_date, to_date=to_date,
+                stock_code=stock_code, exchange_code=exchange_code,
+                product_type=product_type, expiry_date=expiry_date_api,
+                right=right, strike_price=strike_price )
+
             if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
-                return right_Data  # ✅ Success mil gaya
-            elif right_Data.get("Error") == "Rate Limit Exceeded" :
-                 time.sleep(120)
-            elif right_Data.get("Error") == "API did not return any response" :
-                 break
-            elif right_Data.get("Error") is None :
-                 break  
+                return right_Data  # ✅ Success
+
+            elif right_Data.get("Error") == "Rate Limit Exceeded":
+                time.sleep(60)  # Breeze ने बोल दिया limit exceed → wait 1 min
+            elif right_Data.get("Error") == "API did not return any response":
+                break
+            elif right_Data.get("Error") is None:
+                break
             else:
                 attempt += 1
                 if attempt < max_retries:
-                    # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
                     time.sleep(delay)
+
         except Exception as e:
             attempt += 1
             print(f"⚠️ Exception on attempt {attempt}: {e}")
             if attempt < max_retries:
                 time.sleep(delay)
 
-    # Agar max retries ke baad bhi success nahi mila
+    # अगर max retries के बाद भी fail
     Error_msg = None
     if right_Data and isinstance(right_Data, dict):
         Error_msg = right_Data.get("Error", "No Error Data")
@@ -154,7 +184,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
             to_date_api = End_Date.strftime("%Y-%m-%dT00:00:00.000Z")
 
             right_Data = safe_get_historical_data( breeze, interval, from_date_api, to_date_api, stock_code,
-                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=10, delay=1 )
+                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=3, delay=1 )
 
             if right_Data["Error"] is None and right_Data["Success"]:
                 if product_type == "futures":
