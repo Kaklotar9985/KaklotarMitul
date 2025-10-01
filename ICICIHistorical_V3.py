@@ -133,26 +133,30 @@ def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code,
         try:
             rate_limiter()  # ✅ पहले limit check करो
 
-            right_Data = breeze.get_historical_data_v2(
-                interval=interval, from_date=from_date, to_date=to_date,
-                stock_code=stock_code, exchange_code=exchange_code,
-                product_type=product_type, expiry_date=expiry_date_api,
-                right=right, strike_price=strike_price )
+            right_Data = breeze.get_historical_data_v2( interval=interval, from_date=from_date, to_date=to_date,stock_code=stock_code, exchange_code=exchange_code,
+                product_type=product_type, expiry_date=expiry_date_api, right=right, strike_price=strike_price )
 
             if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
                 return right_Data  # ✅ Success
+            # elif right_Data.get("Error") == "Rate Limit Exceeded":
+            #     time.sleep(60)  # Breeze ने बोल दिया limit exceed → wait 1 min
+            # elif right_Data.get("Error") == "API did not return any response":
+            #     break
+            # elif right_Data.get("Error") is None:
+            #     break
+            # else:
+            #     attempt += 1
+            #     if attempt < max_retries:
+            #         time.sleep(delay)
+            if right_Data.get("Error") != "Rate Limit Exceeded":
+               attempt += 1
+            if attempt < max_retries:
+                # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
+                time.sleep(delay)
 
-            elif right_Data.get("Error") == "Rate Limit Exceeded":
-                time.sleep(60)  # Breeze ने बोल दिया limit exceed → wait 1 min
-            elif right_Data.get("Error") == "API did not return any response":
-                break
-            elif right_Data.get("Error") is None:
-                break
-            else:
-                attempt += 1
-                if attempt < max_retries:
-                    time.sleep(delay)
 
+
+        
         except Exception as e:
             attempt += 1
             print(f"⚠️ Exception on attempt {attempt}: {e}")
