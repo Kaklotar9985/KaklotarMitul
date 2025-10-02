@@ -96,88 +96,82 @@ def get_Stock_Name(breeze, exchange_code: str, stock_code: str) -> str:
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-from datetime import datetime, timedelta
 from IPython.display import clear_output
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from tabulate import tabulate
 from dateutil import parser
 import pandas as pd
-import time
 import threading
+import time
 
-# Global Rate Limiter
-lock = threading.Lock()
-CALL_LIMIT = 95        # Breeze limit ~100 per minute, थोड़ा buffer रख रहे हैं
-WINDOW = 60            # seconds (1 minute)
-call_times = []
+CALL_LIMIT = 90
+Start_Time = None
+Total_Count = 0
 
 def rate_limiter():
-    global call_times
-    with lock:
-        now = time.time()
-        # Purane 60s ke calls hatao
-        call_times = [t for t in call_times if now - t < WINDOW]
+    global Total_Count, Start_Time
+    Total_Count += 1
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
 
-        if len(call_times) >= CALL_LIMIT:
-            wait_time = WINDOW - (now - call_times[0])
-            # print(f"⚠️ Rate limit reached! Waiting {wait_time:.2f}s...")
-            time.sleep(wait_time)
+    if Start_Time is None:
+        Start_Time = now
 
-        call_times.append(time.time())
+    # कितने मिनट हो चुके
+    total_minute = ((now - Start_Time).total_seconds() // 60) + 1
+    allowed_calls = total_minute * CALL_LIMIT
+    remaining = allowed_calls - Total_Count
 
-def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code,
-                             exchange_code, product_type, expiry_date_api, right, strike_price,
+    # ✅ अगर limit exceed हो गया → अगली minute तक wait
+    while remaining < 0:
+        wait_time = 60 - now.second
+        clear_output(wait=True)
+        print(f"⚠️ Rate Limit Reached! Waiting {wait_time} sec...")
+        time.sleep(wait_time)
+        now = datetime.now(ZoneInfo("Asia/Kolkata"))
+        total_minute = ((now - Start_Time).total_seconds() // 60) + 1
+        allowed_calls = total_minute * CALL_LIMIT
+        remaining = allowed_calls - Total_Count
+
+
+def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date_api, right, strike_price,
                              max_retries=2, delay=1):
     attempt = 0
     right_Data = None
+
     while attempt < max_retries:
         try:
-            rate_limiter()  # ✅ पहले limit check करो
+            rate_limiter()
+            right_Data = breeze.get_historical_data_v2(interval=interval,from_date=from_date,to_date=to_date,stock_code=stock_code,
+                exchange_code=exchange_code,product_type=product_type,expiry_date=expiry_date_api,right=right,strike_price=strike_price )
 
-            right_Data = breeze.get_historical_data_v2( interval=interval, from_date=from_date, to_date=to_date,stock_code=stock_code, exchange_code=exchange_code,
-                product_type=product_type, expiry_date=expiry_date_api, right=right, strike_price=strike_price )
+            # ✅ Success check
+            if (right_Data and isinstance(right_Data, dict) and right_Data.get("Error") is None and right_Data.get("Success")):
+                return right_Data
 
-            if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
-                return right_Data  # ✅ Success
+            # ❌ अगर rate limit exceed message आया
+            if right_Data and right_Data.get("Error") == "Rate Limit Exceeded":
+                print("⚠️ Breeze Rate Limit Error → Waiting 60 sec...")
+                time.sleep(60)
+                continue  # retry same attempt
+
             attempt += 1
             if attempt < max_retries:
-                # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
                 time.sleep(delay)
-            
-            
-            
-            
-            # elif right_Data.get("Error") == "Rate Limit Exceeded":
-            #     time.sleep(60)  # Breeze ने बोल दिया limit exceed → wait 1 min
-            # elif right_Data.get("Error") == "API did not return any response":
-            #     break
-            # elif right_Data.get("Error") is None:
-            #     break
-            # else:
-            #     attempt += 1
-            #     if attempt < max_retries:
-            #         time.sleep(delay)
-            # if right_Data.get("Error") != "Rate Limit Exceeded":
-            #    attempt += 1
-            # if attempt < max_retries:
-            #     # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
-            #     time.sleep(delay)
 
-
-
-        
         except Exception as e:
             attempt += 1
             print(f"⚠️ Exception on attempt {attempt}: {e}")
             if attempt < max_retries:
                 time.sleep(delay)
 
-    # अगर max retries के बाद भी fail
+    # ❌ अगर max retries के बाद भी fail
     Error_msg = None
     if right_Data and isinstance(right_Data, dict):
-        Error_msg = right_Data.get("Error", "No Error Data")
-    if Error_msg is None:
+        Error_msg = right_Data.get("Error", "Unknown Error")
+    else:
         Error_msg = "API did not return any response"
-    return {"Error": f"Failed after {max_retries} Retries, API_Error: {Error_msg}", "Success": None}
+    return { "Error": f"Failed after {max_retries} Retries | API_Error: {Error_msg}","Success": False }
 
 
 def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
