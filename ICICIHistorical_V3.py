@@ -104,7 +104,7 @@ from dateutil import parser
 import pandas as pd
 import threading
 import time
-
+'''
 CALL_LIMIT = 90
 Start_Time = None
 Total_Count = 0
@@ -172,6 +172,43 @@ def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code, e
     else:
         Error_msg = "API did not return any response"
     return { "Error": f"Failed after {max_retries} Retries | API_Error: {Error_msg}","Success": False }
+'''
+
+import pandas as pd
+from datetime import datetime, timedelta
+from dateutil import parser
+from IPython.display import clear_output
+from tabulate import tabulate
+import time
+def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date_api, right, strike_price,
+                             max_retries=2, delay=1):
+    attempt = 0
+    while attempt < max_retries:
+        try:
+            right_Data = breeze.get_historical_data_v2( interval=interval, from_date=from_date, to_date=to_date, stock_code=stock_code, 
+                         exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date_api, right=right, strike_price=strike_price)
+            if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
+                return right_Data  # ✅ Success mil gaya
+            # Agar error mila toh retry
+            attempt += 1
+            if attempt < max_retries:
+                # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
+                time.sleep(delay)
+        except Exception as e:
+            attempt += 1
+            print(f"⚠️ Exception on attempt {attempt}: {e}")
+            if attempt < max_retries:
+                time.sleep(delay)
+
+    # Agar max retries ke baad bhi success nahi mila
+    Error_msg = None
+    if right_Data and isinstance(right_Data, dict):
+        Error_msg = right_Data.get("Error", "No Error Data")
+    if Error_msg is None:
+        Error_msg = "API did not return any response"
+    return {"Error": f"Failed after {max_retries} Retries, API_Error: {Error_msg}", "Success": None}
+
+
 
 
 def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
