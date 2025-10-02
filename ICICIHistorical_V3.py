@@ -138,6 +138,14 @@ def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code,
 
             if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
                 return right_Data  # ✅ Success
+            attempt += 1
+            if attempt < max_retries:
+                # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
+                time.sleep(delay)
+            
+            
+            
+            
             # elif right_Data.get("Error") == "Rate Limit Exceeded":
             #     time.sleep(60)  # Breeze ने बोल दिया limit exceed → wait 1 min
             # elif right_Data.get("Error") == "API did not return any response":
@@ -148,11 +156,11 @@ def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code,
             #     attempt += 1
             #     if attempt < max_retries:
             #         time.sleep(delay)
-            if right_Data.get("Error") != "Rate Limit Exceeded":
-               attempt += 1
-            if attempt < max_retries:
-                # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
-                time.sleep(delay)
+            # if right_Data.get("Error") != "Rate Limit Exceeded":
+            #    attempt += 1
+            # if attempt < max_retries:
+            #     # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
+            #     time.sleep(delay)
 
 
 
