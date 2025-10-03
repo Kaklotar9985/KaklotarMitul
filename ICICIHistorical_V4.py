@@ -96,57 +96,105 @@ def get_Stock_Name(breeze, exchange_code: str, stock_code: str) -> str:
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data   Fetch_ICICI_Historical_Data
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-import pandas as pd
-from datetime import datetime, timedelta
-from dateutil import parser
 from IPython.display import clear_output
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from tabulate import tabulate
+from dateutil import parser
+import pandas as pd
+import threading
 import time
+CALL_LIMIT = 90
+Start_Time = None
+Total_Count = 0
+
+def rate_limiter():
+    global Total_Count, Start_Time
+    Total_Count += 1
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
+
+    if Start_Time is None:
+        Start_Time = now
+
+    # कितने मिनट हो चुके
+    total_minute = ((now - Start_Time).total_seconds() // 60) + 1
+    allowed_calls = total_minute * CALL_LIMIT
+    remaining = allowed_calls - Total_Count
+
+    # ✅ अगर limit exceed हो गया → अगली minute तक wait
+    while remaining < 0:
+        wait_time = 60 - now.second
+        clear_output(wait=True)
+        print(f"⚠️ Rate Limit Reached! Waiting {wait_time} sec...")
+        time.sleep(wait_time)
+        now = datetime.now(ZoneInfo("Asia/Kolkata"))
+        total_minute = ((now - Start_Time).total_seconds() // 60) + 1
+        allowed_calls = total_minute * CALL_LIMIT
+        remaining = allowed_calls - Total_Count
+
+
 def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date_api, right, strike_price,
                              max_retries=2, delay=1):
     attempt = 0
+    right_Data = None
+
     while attempt < max_retries:
         try:
-            right_Data = breeze.get_historical_data_v2( interval=interval, from_date=from_date, to_date=to_date, stock_code=stock_code, 
-                         exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date_api, right=right, strike_price=strike_price)
-            if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
-                return right_Data  # ✅ Success mil gaya
-            # Agar error mila toh retry
+            rate_limiter()
+            right_Data = breeze.get_historical_data_v2(interval=interval,from_date=from_date,to_date=to_date,stock_code=stock_code,
+                exchange_code=exchange_code,product_type=product_type,expiry_date=expiry_date_api,right=right,strike_price=strike_price )
+
+            # ✅ Success check
+            if (right_Data and isinstance(right_Data, dict) and right_Data.get("Error") is None and right_Data.get("Success")):
+                return right_Data
+
+            # ❌ अगर rate limit exceed message आया
+            if right_Data and right_Data.get("Error") == "Rate Limit Exceeded":
+                print("⚠️ Breeze Rate Limit Error → Waiting 60 sec...")
+                time.sleep(60)
+                continue  # retry same attempt
+
             attempt += 1
             if attempt < max_retries:
-                # print(f"⚠️ Retry {attempt}/{max_retries} for {stock_code} | {right}-{strike_price} | Waiting {delay}s...")
                 time.sleep(delay)
+
         except Exception as e:
             attempt += 1
             print(f"⚠️ Exception on attempt {attempt}: {e}")
             if attempt < max_retries:
                 time.sleep(delay)
 
-    # Agar max retries ke baad bhi success nahi mila
+    # ❌ अगर max retries के बाद भी fail
     Error_msg = None
     if right_Data and isinstance(right_Data, dict):
-        Error_msg = right_Data.get("Error", "No Error Data")
-    if Error_msg is None:
+        Error_msg = right_Data.get("Error", "Unknown Error")
+    else:
         Error_msg = "API did not return any response"
-    return {"Error": f"Failed after {max_retries} Retries, API_Error: {Error_msg}", "Success": None}
+    return { "Error": f"Failed after {max_retries} Retries | API_Error: {Error_msg}","Success": False }
 
 def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
     try:
-        final_df = pd.DataFrame()
+        # fetch_Futures_Data_Error = {}
+        Datas_List = []
         Options_Type = "NA"
 
+        # Parse Expiry_Date
         Expiry_Date = datetime.strptime(Expiry_Date, "%d-%m-%Y")
         ToDate = datetime.today()
-        End_Date = min(Expiry_Date, ToDate)  + timedelta(days=1)
-        Start_Date = End_Date - timedelta(days=past_day)
-        Start_Date = Start_Date.replace(hour=9, minute=15, second=0)
-        expiry_date_api = Expiry_Date.strftime("%Y-%m-%dT00:00:00.000Z")
+        end_date = min(Expiry_Date, ToDate)  + timedelta(days=1)
+        Start_Date = end_date - timedelta(days=past_day)
+
         if product_type in ("futures", "cash"):
+            # Format dates for API
+            expiry_date_api = Expiry_Date.strftime("%Y-%m-%dT00:00:00.000Z")
             from_date_api = Start_Date.strftime("%Y-%m-%dT00:00:00.000Z")
-            to_date_api = End_Date.strftime("%Y-%m-%dT00:00:00.000Z")
+            to_date_api = end_date.strftime("%Y-%m-%dT00:00:00.000Z")
+
+            # right_Data = breeze.get_historical_data_v2( interval=interval, from_date=from_date_api, to_date=to_date_api, stock_code=stock_code,
+            #     exchange_code=exchange_code, product_type=product_type,  expiry_date=expiry_date_api, right=right, strike_price=strike_price )
 
             right_Data = safe_get_historical_data( breeze, interval, from_date_api, to_date_api, stock_code,
-                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=3, delay=1 )
+                exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=2, delay=1 )
 
             if right_Data["Error"] is None and right_Data["Success"]:
                 if product_type == "futures":
@@ -173,64 +221,69 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                 Data = Data.rename(columns=rename_map)
                 valid_cols = [col for col in Column if col in Data.columns]
                 Data = Data[valid_cols]
-                final_df = pd.concat([Data, final_df], ignore_index=True)
+                Datas_List.append(Data)
+            else:
+                Error_msg    = right_Data.get("Error", None)
+                if Error_msg:
+                    Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
+                    Error_Strike = f"{strike_price} - {Options_Type}"
+                    Error_Date   = from_date_api.strftime("%d-%m-%Y")
+                    Data_Error(f"ICICI_Historical Error : {Error_msg}", Error_Expiry, Error_Strike, Error_Date)
+
 
         elif product_type == "options":
-            # Loop start (latest se shuru karke peeche ki taraf)
             Options_Type = right
-            current_to = End_Date
-            while current_to > Start_Date:
-                # print(f"current_to: {current_to.strftime('%d-%m-%Y %H:%M')}",f"Start_Date: {Start_Date.strftime('%d-%m-%Y %H:%M')}")
-                from_date_api = (Start_Date  - timedelta(days=5)).strftime("%Y-%m-%dT00:00:00.000Z")
-                to_date_api   = current_to.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            # For options, always use day-by-day fetching
+            date_list = [(Start_Date + timedelta(days=i)).strftime("%d-%m-%Y")
+                        for i in range((end_date - Start_Date).days + 1)]
 
-                right_Data = safe_get_historical_data(breeze, interval, from_date_api, to_date_api, stock_code,
-                    exchange_code, product_type, expiry_date_api, right, strike_price, max_retries=10, delay=00)
+            expiry_date_api = Expiry_Date.strftime("%Y-%m-%dT00:00:00.000Z")
 
-                Error   = right_Data.get("Error")
-                Success = right_Data.get("Success")
+            for i, Dates in enumerate(date_list):
+                Date = datetime.strptime(Dates, "%d-%m-%Y")
+                start_date_time = datetime.strptime((Date.strftime("%d-%m-%Y 09:15")), "%d-%m-%Y %H:%M")
+                end_date_time = datetime.strptime(((Date + timedelta(days=1)).strftime("%d-%m-%Y 09:14")), "%d-%m-%Y %H:%M")
+                from_date = start_date_time.strftime("%Y-%m-%dT00:00:00.000Z")
+                to_date = end_date_time.strftime("%Y-%m-%dT00:00:00.000Z")
 
-                if Error is None and Success:
-                  Column = ["stock_code", "expiry_date", "strike_price", "datetime", f"{Options_Type}_open",
-                            f"{Options_Type}_high", f"{Options_Type}_low", f"{Options_Type}_close",
-                            f"{Options_Type}_volume", f"{Options_Type}_oi"]
+                # right_Data = breeze.get_historical_data_v2(interval=interval, from_date=from_date, to_date=to_date, stock_code=stock_code,
+                #     exchange_code=exchange_code, product_type=product_type,  expiry_date=expiry_date_api, right=right, strike_price=strike_price )
 
-                  Data = pd.DataFrame(right_Data["Success"])
+                right_Data = safe_get_historical_data( breeze, interval, from_date, to_date, stock_code,
+                    exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=2, delay=1 )
 
-                  # Check if we got any data for this day
-                  if len(Data) > 0:
-                      Data['datetime'] = Data['datetime'].apply(lambda x: parser.parse(x).strftime('%d-%m-%Y %H:%M'))
+                if right_Data["Error"] is None and right_Data["Success"]:
+                    Column = ["stock_code", "expiry_date", "strike_price", "datetime", f"{Options_Type}_open",
+                              f"{Options_Type}_high", f"{Options_Type}_low", f"{Options_Type}_close",
+                              f"{Options_Type}_volume", f"{Options_Type}_oi"]
 
-                      if "expiry_date" in Data.columns:
-                          Data['expiry_date'] = Data['expiry_date'].apply(lambda x: parser.parse(x).strftime("%d-%m-%Y"))
-                      else:
-                          Data['expiry_date'] = Expiry_Date.strftime("%d-%m-%Y")
+                    Data = pd.DataFrame(right_Data["Success"])
 
-                      rename_map = { "open" : f"{Options_Type}_open",  "high": f"{Options_Type}_high", "low": f"{Options_Type}_low",
-                                      "close": f"{Options_Type}_close", "volume": f"{Options_Type}_volume" }
+                    # Check if we got any data for this day
+                    if len(Data) > 0:
+                        Data['datetime'] = Data['datetime'].apply(lambda x: parser.parse(x).strftime('%d-%m-%Y %H:%M'))
 
-                      if "open_interest" in Data.columns:
-                          rename_map["open_interest"] = f"{Options_Type}_oi"
+                        if "expiry_date" in Data.columns:
+                            Data['expiry_date'] = Data['expiry_date'].apply(lambda x: parser.parse(x).strftime("%d-%m-%Y"))
+                        else:
+                            Data['expiry_date'] = Expiry_Date.strftime("%d-%m-%Y")
 
-                      Data = Data.rename(columns=rename_map)
-                      valid_cols = [col for col in Column if col in Data.columns]
-                      Data = Data[valid_cols]
-                    
-                      final_df = pd.concat([Data, final_df], ignore_index=True)
+                        rename_map = { "open" : f"{Options_Type}_open",  "high": f"{Options_Type}_high", "low": f"{Options_Type}_low",
+                                       "close": f"{Options_Type}_close", "volume": f"{Options_Type}_volume" }
 
-                      # Get the earliest datetime from the fetched data
-                      Data['datetime_dt'] = pd.to_datetime(Data['datetime'], format='%d-%m-%Y %H:%M')
-                      first_time = Data['datetime_dt'].min()
-                      if first_time <= Start_Date:
-                         break
-                      current_to = first_time - timedelta(minutes=1)
+                        if "open_interest" in Data.columns:
+                            rename_map["open_interest"] = f"{Options_Type}_oi"
 
+                        Data = Data.rename(columns=rename_map)
+                        valid_cols = [col for col in Column if col in Data.columns]
+                        Data = Data[valid_cols]
+                        Datas_List.append(Data)
                 else:
                     Error_msg    = right_Data.get("Error", None)
                     if Error_msg:
                       Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
                       Error_Strike = f"{strike_price} - {Options_Type}"
-                      Error_Date   = datetime.strptime(to_date_api[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
+                      Error_Date   = datetime.strptime(from_date[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
                       Data_Error(f"ICICI_Historical Error : {Error_msg}", Error_Expiry, Error_Strike, Error_Date)
 
                 # Add a small delay to avoid hitting API rate limits
@@ -238,8 +291,8 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                 time.sleep(0.1)
 
         # Combine all dataframes
-        if not final_df.empty:
-            Analysis_Data = final_df.copy()
+        if Datas_List:
+            Analysis_Data = pd.concat(Datas_List)
 
             # Convert to datetime for proper sorting
             Analysis_Data["datetime"] = pd.to_datetime(Analysis_Data["datetime"], format="%d-%m-%Y %H:%M")
@@ -247,15 +300,16 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
 
             # Sort by datetime
             Analysis_Data.sort_values(by="datetime", ascending=True, inplace=True)
-            Analysis_Data = Analysis_Data[Analysis_Data["datetime"] >= Start_Date]
             Analysis_Data.reset_index(drop=True, inplace=True)
 
             # Convert back to string format
             Analysis_Data["datetime"] = Analysis_Data["datetime"].dt.strftime('%d-%m-%Y %H:%M')
             Analysis_Data["expiry_date"] = Analysis_Data["expiry_date"].dt.strftime('%d-%m-%Y')
+
+            # clear_output(wait=True)
             return Analysis_Data
         else:
-            Error_msg_Data = right_Data.get("Error", None)
+            Error_msg_Data    = right_Data.get("Error", None)
             Error_msg    = f"ICICI_Historical Combine all dataframes Error {Error_msg_Data}"
             Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
             Error_Strike = f"{strike_price} - {Options_Type}"
@@ -274,16 +328,16 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
         return None
 
 # # Example usage
-# stock_name = "Nifty"
+# stock_name = "Reliance"
 # stock_code = get_Stock_Name(breeze, "NSE", stock_name)
-# exchange_code = "NFO"          # "NFO" "NSE"
+# exchange_code = "NSE"          # "NFO" "NSE"
 # stock_code    = stock_code     # Nifty
-# product_type  = "options"      # "options", "futures", "cash"
-# right         = "call"       # "others" , "call" , "put"
-# strike_price  = 24700              # integer, not string
+# product_type  = "futures"      # "options", "futures", "cash"
+# right         = "others"       # "others" , "call" , "put"
+# strike_price  = 0              # integer, not string
 # interval      = "1minute"      # "1second", "1minute", "5minute", "30minute" , "1day".
 # Expiry_Date   = '30-09-2025'   # Valid expiry date supported by Breeze API
-# past_day      = 20
+# past_day      = 5
 
 # Data = Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day)
 # if Data is not None:
