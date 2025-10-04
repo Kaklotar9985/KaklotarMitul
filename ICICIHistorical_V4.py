@@ -227,69 +227,74 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                 final_df = pd.concat([Data, final_df], ignore_index=True)
 
         elif product_type == "options":
-            # Loop start (latest se shuru karke peeche ki taraf)
             Options_Type = right
             current_to = End_Date
+            no_data_count = 0  # लगातार no data आने की गिनती
+
             while current_to > Start_Date:
-                # print(f"current_to: {current_to.strftime('%d-%m-%Y %H:%M')}",f"Start_Date: {Start_Date.strftime('%d-%m-%Y %H:%M')}")
-                from_date_api = (Start_Date  - timedelta(days=5)).strftime("%Y-%m-%dT00:00:00.000Z")
+                from_date_api = (current_to - timedelta(days=5)).strftime("%Y-%m-%dT00:00:00.000Z")
                 to_date_api   = current_to.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
                 right_Data = safe_get_historical_data(breeze, interval, from_date_api, to_date_api, stock_code,
-                    exchange_code, product_type, expiry_date_api, right, strike_price, max_retries=3, delay=0)
+                    exchange_code, product_type, expiry_date_api, right, strike_price,max_retries=3, delay=1)
 
                 Error   = right_Data.get("Error")
                 Success = right_Data.get("Success")
 
                 if Error is None and Success:
-                  Column = ["stock_code", "expiry_date", "strike_price", "datetime", f"{Options_Type}_open",
-                            f"{Options_Type}_high", f"{Options_Type}_low", f"{Options_Type}_close",
-                            f"{Options_Type}_volume", f"{Options_Type}_oi"]
+                    Data = pd.DataFrame(Success)
 
-                  Data = pd.DataFrame(right_Data["Success"])
+                    if not Data.empty:
+                        no_data_count = 0  # reset no data counter
+                        Column = ["stock_code", "expiry_date", "strike_price", "datetime", 
+                                  f"{Options_Type}_open", f"{Options_Type}_high", f"{Options_Type}_low", 
+                                  f"{Options_Type}_close", f"{Options_Type}_volume", f"{Options_Type}_oi"]
 
-                  # Check if we got any data for this day
-                  if len(Data) > 0:
-                      Data['datetime'] = Data['datetime'].apply(lambda x: parser.parse(x).strftime('%d-%m-%Y %H:%M'))
+                        Data['datetime'] = Data['datetime'].apply(lambda x: parser.parse(x).strftime('%d-%m-%Y %H:%M'))
 
-                      if "expiry_date" in Data.columns:
-                          Data['expiry_date'] = Data['expiry_date'].apply(lambda x: parser.parse(x).strftime("%d-%m-%Y"))
-                      else:
-                          Data['expiry_date'] = Expiry_Date.strftime("%d-%m-%Y")
+                        if "expiry_date" in Data.columns:
+                            Data['expiry_date'] = Data['expiry_date'].apply(lambda x: parser.parse(x).strftime("%d-%m-%Y"))
+                        else:
+                            Data['expiry_date'] = Expiry_Date.strftime("%d-%m-%Y")
 
-                      rename_map = { "open" : f"{Options_Type}_open",  "high": f"{Options_Type}_high", "low": f"{Options_Type}_low",
-                                      "close": f"{Options_Type}_close", "volume": f"{Options_Type}_volume" }
+                        rename_map = {"open": f"{Options_Type}_open", "high": f"{Options_Type}_high",
+                                      "low": f"{Options_Type}_low", "close": f"{Options_Type}_close",
+                                      "volume": f"{Options_Type}_volume"}
+                        if "open_interest" in Data.columns:
+                            rename_map["open_interest"] = f"{Options_Type}_oi"
 
-                      if "open_interest" in Data.columns:
-                          rename_map["open_interest"] = f"{Options_Type}_oi"
+                        Data = Data.rename(columns=rename_map)
+                        valid_cols = [col for col in Column if col in Data.columns]
+                        Data = Data[valid_cols]
 
-                      Data = Data.rename(columns=rename_map)
-                      valid_cols = [col for col in Column if col in Data.columns]
-                      Data = Data[valid_cols]
-                    
-                      final_df = pd.concat([Data, final_df], ignore_index=True)
+                        final_df = pd.concat([Data, final_df], ignore_index=True)
 
-                      # Get the earliest datetime from the fetched data
-                      Data['datetime_dt'] = pd.to_datetime(Data['datetime'], format='%d-%m-%Y %H:%M')
-                      
-                      first_time = Data['datetime_dt'].min()
-                      if first_time <= Start_Date:
-                         break
-                      current_to = first_time - timedelta(minutes=1)
-                  else :
-                      current_to = current_to - timedelta(days=1)
+                        # पीछे जाने के लिए earliest datetime लो
+                        Data['datetime_dt'] = pd.to_datetime(Data['datetime'], format='%d-%m-%Y %H:%M')
+                        first_time = Data['datetime_dt'].min()
+
+                        if first_time <= Start_Date:
+                            break
+                        current_to = first_time - timedelta(minutes=1)
+
+                    else:
+                        no_data_count += 1
+                        current_to -= timedelta(days=1)
 
                 else:
+                    no_data_count += 1
+                    current_to -= timedelta(days=1)
+
+                # अगर बहुत बार no data मिला तो break
+                if no_data_count >= 10:
                     Error_msg    = right_Data.get("Error", None)
                     if Error_msg:
                       Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
                       Error_Strike = f"{strike_price} - {Options_Type}"
                       Error_Date   = datetime.strptime(to_date_api[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
-                      Data_Error(f"ICICI_Historical Error : {Error_msg}", Error_Expiry, Error_Strike, Error_Date)      
-
-                # Add a small delay to avoid hitting API rate limits
-                import time
-                time.sleep(0.1)
+                      Data_Error(f"ICICI_Historical Error Try 10  : {Error_msg}", Error_Expiry, Error_Strike, Error_Date)                  
+                    break
+                time.sleep(0.1)  # rate limit से बचने के लिए
 
         # Combine all dataframes
         if not final_df.empty:
