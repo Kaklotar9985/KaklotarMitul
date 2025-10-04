@@ -103,10 +103,9 @@ from tabulate import tabulate
 from dateutil import parser
 import pandas as pd
 import threading
-import http.client
 import time
 
-CALL_LIMIT = 95
+CALL_LIMIT = 98
 Total_Count = 0
 Start_Time = time.time()
 
@@ -131,55 +130,46 @@ def rate_limiter():
 #     print(f"API Call {i+1} done at {time.strftime('%H:%M:%S')}")
 #     time.sleep(0.005)   # हर call के बीच 0.5s का gap रखा
 
-def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code,
-                             exchange_code, product_type, expiry_date_api, right, strike_price,
-                             max_retries=3, delay=2):
+import time
+
+def safe_get_historical_data(breeze, interval, from_date, to_date,stock_code, exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=2, delay=1):
     attempt = 0
     right_Data = None
-    
+
     while attempt < max_retries:
         try:
-            rate_limiter()  # ✅ पहले limit check करो
+            rate_limiter()  # ✅ Rate limit check
 
             # API Call
             right_Data = breeze.get_historical_data_v2(interval=interval,from_date=from_date,to_date=to_date,stock_code=stock_code,exchange_code=exchange_code, 
                                                        product_type=product_type,expiry_date=expiry_date_api,right=right,strike_price=strike_price  )
+
             
-            if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
-                return right_Data  # ✅ Success
+            if right_Data and right_Data.get("Error") is None and right_Data.get("Success"):  # ✅ अगर data मिला और कोई error नहीं है
+                 return right_Data  
+            elif right_Data and right_Data.get("Error") == "Rate Limit Exceeded":             # 🚫 अगर Breeze ने बोला limit exceed
+                 time.sleep(120)
+            elif right_Data and right_Data.get("Error") == "API did not return any response": # 🚫 अगर API response empty आया
+                 return {"Error": f"Failed after, API_Error: API did not return any response","Success": None }
+            elif right_Data and right_Data.get("Error") is None:                              # 🚫 अगर कुछ भी error message नहीं है → break (retry का फायदा नहीं)
+                 return {"Error": f"Failed after, API_Error: None","Success": None }
 
-            elif right_Data.get("Error") == "Rate Limit Exceeded":
-                time.sleep(60)  # Breeze ने बोला limit exceed → wait 1 min
-
-            elif right_Data.get("Error") == "API did not return any response":
-                break
-
-            elif right_Data.get("Error") is None:
-                break
-
-        except http.client.IncompleteRead as e:
-            attempt += 1
-            print(f"⚠️ IncompleteRead Error on attempt {attempt}, retrying... ({e})")
+            attempt += 1                                                                      # अगर ऊपर से कोई success नहीं मिला तो retry करो
             if attempt < max_retries:
                 time.sleep(delay)
-                continue  # retry करो
 
         except Exception as e:
             attempt += 1
-            print(f"⚠️ Exception on attempt {attempt}: {e}")
             if attempt < max_retries:
                 time.sleep(delay)
 
-        attempt += 1
-
-    # अगर max retries के बाद भी fail
-    Error_msg = None
+    # ✅ अगर fail हो गया final error return करो
+    error_msg = None
     if right_Data and isinstance(right_Data, dict):
-        Error_msg = right_Data.get("Error", "No Error Data")
-    if Error_msg is None:
-        Error_msg = "API did not return any response"
-
-    return {"Error": f"Failed after {max_retries} Retries, API_Error: {Error_msg}", "Success": None}
+        error_msg = right_Data.get("Error", "No Error Data")
+    if not error_msg:
+        error_msg = "API did not return any response"
+    return {"Error": f"Failed after {max_retries} retries, API_Error: {error_msg}","Success": None }
 
 def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
     try:
@@ -227,79 +217,82 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                 final_df = pd.concat([Data, final_df], ignore_index=True)
 
         elif product_type == "options":
-            Options_Type = right
+            Options_Type = right  # CE ya PE
             current_to = End_Date
-            no_data_count = 0  # लगातार no data आने की गिनती
 
             while current_to > Start_Date:
-                from_date_api = (current_to - timedelta(days=5)).strftime("%Y-%m-%dT00:00:00.000Z")
+                from_date_api = (Start_Date - timedelta(days=5)).strftime("%Y-%m-%dT00:00:00.000Z")
                 to_date_api   = current_to.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
-                right_Data = safe_get_historical_data(breeze, interval, from_date_api, to_date_api, stock_code,
-                    exchange_code, product_type, expiry_date_api, right, strike_price,max_retries=3, delay=1)
+                right_Data = safe_get_historical_data( breeze, interval, from_date_api, to_date_api,stock_code, exchange_code, product_type,
+                                                       expiry_date_api, right, strike_price,max_retries=3, delay=0)
 
-                Error   = right_Data.get("Error")
-                Success = right_Data.get("Success")
+                Error   = right_Data.get("Error", None)
+                Success = right_Data.get("Success", None)
 
+                # ---- Data Not Found Case ----
+                if not Success:
+                    Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
+                    Error_Strike = f"{strike_price} - {Options_Type}"
+                    Error_Date   = datetime.strptime(to_date_api[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
+                    Data_Error(f"ICICI_Historical Error_API: {Error}", Error_Expiry, Error_Strike, Error_Date) 
+                    current_to -= timedelta(days=1)
+                    continue
+
+                # ---- Data Found ----
                 if Error is None and Success:
                     Data = pd.DataFrame(Success)
-
                     if not Data.empty:
-                        no_data_count = 0  # reset no data counter
-                        Column = ["stock_code", "expiry_date", "strike_price", "datetime", 
-                                  f"{Options_Type}_open", f"{Options_Type}_high", f"{Options_Type}_low", 
-                                  f"{Options_Type}_close", f"{Options_Type}_volume", f"{Options_Type}_oi"]
+                        Column = ["stock_code", "expiry_date", "strike_price", "datetime",
+                            f"{Options_Type}_open",  f"{Options_Type}_high",   f"{Options_Type}_low",
+                            f"{Options_Type}_close", f"{Options_Type}_volume", f"{Options_Type}_oi",  ]
 
-                        Data['datetime'] = Data['datetime'].apply(lambda x: parser.parse(x).strftime('%d-%m-%Y %H:%M'))
-
+                        # Format datetime
+                        Data["datetime"] = pd.to_datetime(Data["datetime"], errors="coerce")
+                        Data["datetime"] = Data["datetime"].dt.strftime("%d-%m-%Y %H:%M")
                         if "expiry_date" in Data.columns:
-                            Data['expiry_date'] = Data['expiry_date'].apply(lambda x: parser.parse(x).strftime("%d-%m-%Y"))
+                            Data["expiry_date"] = pd.to_datetime(Data["expiry_date"], errors="coerce").dt.strftime("%d-%m-%Y")
                         else:
-                            Data['expiry_date'] = Expiry_Date.strftime("%d-%m-%Y")
-
-                        rename_map = {"open": f"{Options_Type}_open", "high": f"{Options_Type}_high",
-                                      "low": f"{Options_Type}_low", "close": f"{Options_Type}_close",
-                                      "volume": f"{Options_Type}_volume"}
+                            Data["expiry_date"] = Expiry_Date.strftime("%d-%m-%Y")
+                        rename_map = {"open": f"{Options_Type}_open",  "high": f"{Options_Type}_high","low": f"{Options_Type}_low",
+                                      "close": f"{Options_Type}_close","volume": f"{Options_Type}_volume"}
                         if "open_interest" in Data.columns:
                             rename_map["open_interest"] = f"{Options_Type}_oi"
-
                         Data = Data.rename(columns=rename_map)
+
+                        # Keep only valid cols
                         valid_cols = [col for col in Column if col in Data.columns]
                         Data = Data[valid_cols]
-
                         final_df = pd.concat([Data, final_df], ignore_index=True)
+                        Data["datetime_dt"] = pd.to_datetime(Data["datetime"], format="%d-%m-%Y %H:%M", errors="coerce")
+                        first_time = Data["datetime_dt"].min()
 
-                        # पीछे जाने के लिए earliest datetime लो
-                        Data['datetime_dt'] = pd.to_datetime(Data['datetime'], format='%d-%m-%Y %H:%M')
-                        first_time = Data['datetime_dt'].min()
-
-                        if first_time <= Start_Date:
+                        if pd.isna(first_time):  # अगर parsing fail हो
+                            current_to -= timedelta(days=1)
+                        elif first_time <= Start_Date:
                             break
-                        current_to = first_time - timedelta(minutes=1)
-
+                        else:
+                            current_to = first_time - timedelta(minutes=1)
                     else:
-                        no_data_count += 1
+                        Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
+                        Error_Strike = f"{strike_price} - {Options_Type}"
+                        Error_Date   = datetime.strptime(to_date_api[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
+                        Data_Error(f"ICICI_Historical Empty,  Error_API: {Error}", Error_Expiry, Error_Strike, Error_Date) 
                         current_to -= timedelta(days=1)
-
                 else:
-                    no_data_count += 1
+                    Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
+                    Error_Strike = f"{strike_price} - {Options_Type}"
+                    Error_Date   = datetime.strptime(to_date_api[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
+                    Data_Error(f"ICICI_Historical Empty,  Error_API: {Error}", Error_Expiry, Error_Strike, Error_Date) 
                     current_to -= timedelta(days=1)
 
-                # अगर बहुत बार no data मिला तो break
-                if no_data_count >= 10:
-                    Error_msg    = right_Data.get("Error", None)
-                    if Error_msg:
-                      Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
-                      Error_Strike = f"{strike_price} - {Options_Type}"
-                      Error_Date   = datetime.strptime(to_date_api[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
-                      Data_Error(f"ICICI_Historical Error Try 10  : {Error_msg}", Error_Expiry, Error_Strike, Error_Date)                  
-                    break
-                time.sleep(0.1)  # rate limit से बचने के लिए
+                # API rate-limit से बचने के लिए
+                time.sleep(0.1)
+
 
         # Combine all dataframes
         if not final_df.empty:
             Analysis_Data = final_df.copy()
-
             # Convert to datetime for proper sorting
             Analysis_Data["datetime"] = pd.to_datetime(Analysis_Data["datetime"], format="%d-%m-%Y %H:%M")
             Analysis_Data["expiry_date"] = pd.to_datetime(Analysis_Data["expiry_date"], format="%d-%m-%Y")
@@ -319,7 +312,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
             Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
             Error_Strike = f"{strike_price} - {Options_Type}"
             Error_Date   = "All Date"
-            Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                   
+            ICICI.Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                   
             print(f"Fetch_Historical_Data Function Error: No Data")
             return None
 
@@ -328,26 +321,27 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
         Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
         Error_Strike = f"{strike_price} - {Options_Type}"
         Error_Date   = "All Date"
-        Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                       
+        ICICI.Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                       
         print(f"Fetch_Historical_Data Function Error: {e}")
         return None
 
 # # Example usage
-# stock_name = "Nifty"
-# stock_code = get_Stock_Name(breeze, "NSE", stock_name)                                      
+# stock_name    = "Nifty"
+# stock_code    = ICICI.get_Stock_Name(breeze, "NSE", stock_name)                                      
 # exchange_code = "NFO"          # "NFO" "NSE"
 # stock_code    = stock_code     # Nifty
 # product_type  = "options"      # "options", "futures", "cash"
-# right         = "call"       # "others" , "call" , "put"
-# strike_price  = 24700              # integer, not string
+# right         = "call"         # "others" , "call" , "put"
+# strike_price  = 24700          # integer, not string
 # interval      = "1minute"      # "1second", "1minute", "5minute", "30minute" , "1day".
 # Expiry_Date   = '30-09-2025'   # Valid expiry date supported by Breeze API
 # past_day      = 20
 
 # Data = Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day)
 # if Data is not None:
+#     Data.to_csv("Data.csv", index=False)
 #     print(tabulate(Data.head(10), headers='keys', tablefmt='pretty', showindex=False))
-#     print(Data)      
+#     print(Data) 
 #=======================================================================================================================================================================
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
