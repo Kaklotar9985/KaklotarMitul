@@ -103,6 +103,7 @@ from tabulate import tabulate
 from dateutil import parser
 import pandas as pd
 import threading
+import http.client
 import time
 
 CALL_LIMIT = 95
@@ -130,33 +131,38 @@ def rate_limiter():
 #     print(f"API Call {i+1} done at {time.strftime('%H:%M:%S')}")
 #     time.sleep(0.005)   # हर call के बीच 0.5s का gap रखा
 
-import time
-
-def safe_get_historical_data(breeze, interval, from_date, to_date,stock_code, exchange_code, product_type, expiry_date_api, right, strike_price,  max_retries=2, delay=1):
+def safe_get_historical_data(breeze, interval, from_date, to_date, stock_code,
+                             exchange_code, product_type, expiry_date_api, right, strike_price,
+                             max_retries=3, delay=2):
     attempt = 0
     right_Data = None
-
+    
     while attempt < max_retries:
         try:
-            rate_limiter()  # ✅ Rate limit check
+            rate_limiter()  # ✅ पहले limit check करो
 
             # API Call
             right_Data = breeze.get_historical_data_v2(interval=interval,from_date=from_date,to_date=to_date,stock_code=stock_code,exchange_code=exchange_code, 
                                                        product_type=product_type,expiry_date=expiry_date_api,right=right,strike_price=strike_price  )
-
             
-            if right_Data and right_Data.get("Error") is None and right_Data.get("Success"):  # ✅ अगर data मिला और कोई error नहीं है
-                 return right_Data  
-            elif right_Data and right_Data.get("Error") == "Rate Limit Exceeded":             # 🚫 अगर Breeze ने बोला limit exceed
-                 time.sleep(60)
-            elif right_Data and right_Data.get("Error") == "API did not return any response": # 🚫 अगर API response empty आया
-                break  
-            elif right_Data and right_Data.get("Error") is None:                              # 🚫 अगर कुछ भी error message नहीं है → break (retry का फायदा नहीं)
-                break  
+            if right_Data is not None and right_Data.get("Error") is None and right_Data.get("Success"):
+                return right_Data  # ✅ Success
 
-            attempt += 1                                                                      # अगर ऊपर से कोई success नहीं मिला तो retry करो
+            elif right_Data.get("Error") == "Rate Limit Exceeded":
+                time.sleep(60)  # Breeze ने बोला limit exceed → wait 1 min
+
+            elif right_Data.get("Error") == "API did not return any response":
+                break
+
+            elif right_Data.get("Error") is None:
+                break
+
+        except http.client.IncompleteRead as e:
+            attempt += 1
+            print(f"⚠️ IncompleteRead Error on attempt {attempt}, retrying... ({e})")
             if attempt < max_retries:
                 time.sleep(delay)
+                continue  # retry करो
 
         except Exception as e:
             attempt += 1
@@ -164,13 +170,16 @@ def safe_get_historical_data(breeze, interval, from_date, to_date,stock_code, ex
             if attempt < max_retries:
                 time.sleep(delay)
 
-    # ✅ अगर fail हो गया final error return करो
-    error_msg = None
+        attempt += 1
+
+    # अगर max retries के बाद भी fail
+    Error_msg = None
     if right_Data and isinstance(right_Data, dict):
-        error_msg = right_Data.get("Error", "No Error Data")
-    if not error_msg:
-        error_msg = "API did not return any response"
-    return {"Error": f"Failed after {max_retries} retries, API_Error: {error_msg}","Success": None }
+        Error_msg = right_Data.get("Error", "No Error Data")
+    if Error_msg is None:
+        Error_msg = "API did not return any response"
+
+    return {"Error": f"Failed after {max_retries} Retries, API_Error: {Error_msg}", "Success": None}
 
 def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
     try:
