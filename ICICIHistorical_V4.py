@@ -171,6 +171,16 @@ def safe_get_historical_data(breeze, interval, from_date, to_date,stock_code, ex
         error_msg = "API did not return any response"
     return {"Error": f"Failed after {max_retries} retries, API_Error: {error_msg}","Success": None }
 
+from dateutil import parser
+def safe_parse_date(x, format_date="%d-%m-%Y"):
+    try:
+        if pd.isna(x) or str(x).strip() == "":
+            return None
+        parsed_date = parser.parse(str(x), fuzzy=True)
+        return parsed_date.strftime(format_date)
+    except Exception:
+        return None
+
 def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type, right, strike_price, interval, Expiry_Date, past_day):
     try:
         final_df = pd.DataFrame()
@@ -251,7 +261,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
                         Data["datetime"] = pd.to_datetime(Data["datetime"], errors="coerce")
                         Data["datetime"] = Data["datetime"].dt.strftime("%d-%m-%Y %H:%M")
                         if "expiry_date" in Data.columns:
-                            Data["expiry_date"] = pd.to_datetime(Data["expiry_date"], errors="coerce").dt.strftime("%d-%m-%Y")
+                            Data["expiry_date"] = Data["expiry_date"].apply(safe_parse_date)
                         else:
                             Data["expiry_date"] = Expiry_Date.strftime("%d-%m-%Y")
                         rename_map = {"open": f"{Options_Type}_open",  "high": f"{Options_Type}_high","low": f"{Options_Type}_low",
