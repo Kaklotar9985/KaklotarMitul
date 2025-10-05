@@ -150,9 +150,9 @@ def safe_get_historical_data(breeze, interval, from_date, to_date,stock_code, ex
             elif right_Data and right_Data.get("Error") == "Rate Limit Exceeded":             # 🚫 अगर Breeze ने बोला limit exceed
                  time.sleep(120)
             elif right_Data and right_Data.get("Error") == "API did not return any response": # 🚫 अगर API response empty आया
-                 return {"Error": f"Failed after, API_Error: API did not return any response","Success": None }
+                 return {"Error":"API did not return any response","Success": None }
             elif right_Data and right_Data.get("Error") is None:                              # 🚫 अगर कुछ भी error message नहीं है → break (retry का फायदा नहीं)
-                 return {"Error": f"Failed after, API_Error: None","Success": None }
+                 return {"Error": None, "Success": None }
 
             attempt += 1                                                                      # अगर ऊपर से कोई success नहीं मिला तो retry करो
             if attempt < max_retries:
