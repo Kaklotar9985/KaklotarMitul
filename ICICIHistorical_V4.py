@@ -302,7 +302,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
 
         # Combine all dataframes
         if not final_df.empty:
-            Analysis_Data = final_df.copy()
+            Analysis_Data = final_df.drop_duplicates(subset=["datetime"], keep="last")       # final_df.copy()
             # Convert to datetime for proper sorting
             Analysis_Data["datetime"] = pd.to_datetime(Analysis_Data["datetime"], format="%d-%m-%Y %H:%M")
             Analysis_Data["expiry_date"] = pd.to_datetime(Analysis_Data["expiry_date"], format="%d-%m-%Y")
