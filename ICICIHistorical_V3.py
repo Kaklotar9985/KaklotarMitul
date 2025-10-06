@@ -322,7 +322,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
             Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
             Error_Strike = f"{strike_price} - {Options_Type}"
             Error_Date   = "All Date"
-            ICICI.Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                   
+            Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                   
             print(f"Fetch_Historical_Data Function Error: No Data")
             return None
 
@@ -331,7 +331,7 @@ def Fetch_ICICI_Historical_Data(breeze, exchange_code, stock_code, product_type,
         Error_Expiry = Expiry_Date.strftime("%d-%m-%Y")
         Error_Strike = f"{strike_price} - {Options_Type}"
         Error_Date   = "All Date"
-        ICICI.Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                       
+        Data_Error(Error_msg, Error_Expiry, Error_Strike, Error_Date)                       
         print(f"Fetch_Historical_Data Function Error: {e}")
         return None
 
