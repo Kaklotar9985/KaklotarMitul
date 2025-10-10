@@ -528,7 +528,7 @@ def get_strike_list(breeze, stock_name, expiry_date, past_days, strike_gap,Plus_
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 import os, zipfile, traceback, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-def download_strike(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day, max_retries=2):
+def download_strike(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day, max_retries=1):
     for attempt in range(1, max_retries + 1):
         try:
             Data = Fetch_Historical_Data(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day)
