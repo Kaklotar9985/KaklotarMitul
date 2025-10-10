@@ -105,7 +105,7 @@ import pandas as pd
 import threading
 import time
 
-CALL_LIMIT = 98
+CALL_LIMIT = 195
 Total_Count = 0
 Start_Time = time.time()
 
@@ -505,8 +505,7 @@ def get_strike_list(breeze, stock_name, expiry_date, past_days, strike_gap,Plus_
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 import os, zipfile, traceback, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-def download_strike(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day, max_retries=3):
+def download_strike(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day, max_retries=2):
     for attempt in range(1, max_retries + 1):
         try:
             Data = Fetch_Historical_Data(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day)
@@ -522,7 +521,7 @@ def download_strike(breeze, exchange_code, stock_name, strike_price, interval, E
             time.sleep(2 * attempt)
     return None
 
-def run_with_progress(strike_list, breeze, exchange_code, stock_name, interval, Expiry_Date, past_day, progress_speed=1, timeout=0):
+def run_with_progress(strike_list, breeze, exchange_code, stock_name, interval, Expiry_Date, past_day, progress_speed=10, timeout=0):
     Downlod_File_List = []
     total_strike = len(strike_list)
     completed = 0
@@ -537,6 +536,7 @@ def run_with_progress(strike_list, breeze, exchange_code, stock_name, interval, 
                 result = future.result(timeout=timeout)   # ✅ timeout added
                 if result:
                     Downlod_File_List.append(result)
+                clear_output(wait=True)
                 print(f"Progress: {completed+1}/{total_strike} completed ✅ (Strike {strike})")
             except Exception as e:
                 print(f"⚠️ Strike {strike} failed: {e}")
