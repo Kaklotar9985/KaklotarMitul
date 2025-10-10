@@ -23,12 +23,36 @@ def ICICI_Login(session_token, APIKEY, SecretKey):
 #=======================================================================================================================================================================
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  ICICI_Login   ICICI_Login     ICICI_Login  ICICI_Login     ICICI_Login     ICICI_Login     ICICI_Login     ICICI_Login      ICICI_Login   ICICI_Login
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+from breeze_connect import BreezeConnect
+import urllib
+def ICICI_Login(session_token, APIKEY, SecretKey):
+    try:
+        if not session_token:
+            login_url = f"https://api.icicidirect.com/apiuser/login?api_key={urllib.parse.quote_plus(APIKEY)}"
+            print("Please login using this link to generate session_token:")
+            print(login_url)
+            return None
+        breeze = BreezeConnect(api_key=APIKEY)
+        breeze.generate_session(api_secret=SecretKey, session_token=session_token)
+        print("Login Successful ✅")
+        return breeze
+    except Exception as e:
+        print("Login Failed ❌")
+        login_url = f"https://api.icicidirect.com/apiuser/login?api_key={urllib.parse.quote_plus(APIKEY)}"
+        print("Please login using this link to generate session_token:\n",)
+        print(login_url,"\n")
+        return None
+#=======================================================================================================================================================================
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  Data_Error  Error_Data_to_Excel (v2)
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 import pandas as pd
 import os
 Error_Data = {}
-def Data_Error(stock_name, Expiry_Date, Strike_Price=None, Options_Type=None, Error_Date=None, Function_Error=None, API_Error = None):
+def Data_Error(stock_name, Expiry_Date, Strike_Price="No", Options_Type="No", Error_Date="No", Function_Error="No", API_Error = "No"):
     global Error_Data
     try:
         if not (stock_name and Expiry_Date and Strike_Price and Options_Type and Error_Date):
