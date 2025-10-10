@@ -31,27 +31,30 @@ except Exception:
 # Error collection utilities
 # ---------------------------
 Error_Data = {}
-
 def Data_Error(stock_name=None, expiry_date=None, strike_price=None, options_type=None, error_date=None, function_error=None, api_error=None):
-    """Collect errors into a dictionary for later export to Excel."""
+    """Collect errors into a dictionary for later export to Excel. Missing fields are auto-filled with 'NA'."""
     global Error_Data
     try:
-        if not (stock_name and expiry_date and strike_price and options_type and error_date):
-            # Not raising — sometimes we call Data_Error with partial info intentionally
-            print("⚠️ stock_name, expiry_date, strike_price, options_type aur error_date dena zaroori hai!")
-            return
+        # Auto-fill missing fields instead of warning
+        stock_name = stock_name or "NA"
+        expiry_date = expiry_date or "NA"
+        strike_price = strike_price or "NA"
+        options_type = options_type or "NA"
+        error_date = error_date or "NA"
+
         if expiry_date not in Error_Data:
             Error_Data[expiry_date] = {}
         if strike_price not in Error_Data[expiry_date]:
             Error_Data[expiry_date][strike_price] = []
+
         Error_Data[expiry_date][strike_price].append({
             "stock_name": stock_name,
             "expiry_date": expiry_date,
             "strike_price": strike_price,
             "options_type": options_type,
             "error_date": error_date,
-            "function_error": function_error,
-            "api_error": api_error,
+            "function_error": function_error or "NA",
+            "api_error": api_error or "NA",
         })
     except Exception as e:
         print(f"Data_Error Function Error: {e}")
@@ -85,6 +88,7 @@ def Error_Data_to_Excel(filename="Error_Data"):
     except Exception as e:
         print(f"Error_Data_to_Excel Function Error: {e}")
         return None
+
 
 # ---------------------------
 # ICICI (Breeze) Login helper
