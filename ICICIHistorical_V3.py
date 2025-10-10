@@ -503,25 +503,31 @@ def get_strike_list(breeze, stock_name, expiry_date, past_days, strike_gap,Plus_
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  run_with_progress   download_strike     run_with_progress   download_strike     run_with_progress   download_strike      run_with_progress   download_strike    run_with_progress   
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+import os, zipfile, traceback, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import os, zipfile
-def download_strike(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day):
-    Data = Fetch_Historical_Data(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day)
-    if Data is not None:
-        os.makedirs(Expiry_Date, exist_ok=True)
-        strike_name = strike_price if strike_price != 0 else "futures"
-        CSV_Name = os.path.join(Expiry_Date, f"{Expiry_Date}_{strike_name}.csv")
-        Data.to_csv(CSV_Name, index=False)
-        clear_output(wait=True)
-        # print(f"Downloaded: {CSV_Name}")
-        return f"{Expiry_Date}_{strike_name}.csv"
+
+def download_strike(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day, max_retries=3):
+    for attempt in range(1, max_retries + 1):
+        try:
+            Data = Fetch_Historical_Data(breeze, exchange_code, stock_name, strike_price, interval, Expiry_Date, past_day)
+            if Data is not None and not Data.empty:
+                os.makedirs(Expiry_Date, exist_ok=True)
+                strike_name = strike_price if strike_price != 0 else "futures"
+                CSV_Name = os.path.join(Expiry_Date, f"{Expiry_Date}_{strike_name}.csv")
+                Data.to_csv(CSV_Name, index=False)
+                return f"{Expiry_Date}_{strike_name}.csv"
+        except Exception as e:
+            if attempt == max_retries:
+                raise e
+            time.sleep(2 * attempt)
     return None
 
-# ✅ Progress Print वाला Function
 def run_with_progress(strike_list, breeze, exchange_code, stock_name, interval, Expiry_Date, past_day, progress_speed=1, timeout=0):
     Downlod_File_List = []
-    total = len(strike_list)
+    total_strike = len(strike_list)
     completed = 0
+    progress_speed = min(progress_speed, total_strike)
+    print(f"Total Strikes: {total_strike} | Progress Speed: {progress_speed}")
     with ThreadPoolExecutor(max_workers=progress_speed) as executor:
         future_to_strike = {executor.submit( download_strike, breeze, exchange_code, stock_name,
                 strike_price, interval, Expiry_Date, past_day ): strike_price for strike_price in strike_list }
@@ -531,7 +537,7 @@ def run_with_progress(strike_list, breeze, exchange_code, stock_name, interval, 
                 result = future.result(timeout=timeout)   # ✅ timeout added
                 if result:
                     Downlod_File_List.append(result)
-                print(f"Progress: {completed+1}/{total} completed ✅ (Strike {strike})")
+                print(f"Progress: {completed+1}/{total_strike} completed ✅ (Strike {strike})")
             except Exception as e:
                 print(f"⚠️ Strike {strike} failed: {e}")
             finally:
