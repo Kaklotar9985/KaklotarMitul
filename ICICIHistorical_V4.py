@@ -499,7 +499,7 @@ def get_start_end_expiry_formet(Expiry_Date: str, Start_Date: str, End_Date: str
 from datetime import datetime
 from tabulate import tabulate
 import pandas as pd
-def Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, strike_price, Start_Date = 60, End_Date = 0, interval = "1minute" ):
+def Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, strike_price, Start_Date = 60, End_Date = 0, interval = "1minute", Loop_Type = "for" ):
     stock_code = get_Stock_Name(breeze, "NSE", stock_name)
     Expiry_Date, Start_Date, End_Date = get_start_end_expiry_formet(Expiry_Date, Start_Date, End_Date)
     # ========================= CASH =========================
@@ -509,32 +509,48 @@ def Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, strike_price
         option_type = "others"
         Expiry_Date = datetime.strptime("01-01-2000", "%d-%m-%Y")
         strike_price = 0
-        data = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        if Loop_Type == "for":
+            data = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        elif Loop_Type == "while":
+            data = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
     # ========================= FUTURES =========================
     elif Options_Type == "fu":
         exchange_code = "NFO"
         product_type = "futures"
         option_type = "others"
         strike_price = 0
-        data = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        if Loop_Type == "for":
+            data = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        elif Loop_Type == "while":
+            data = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
     # ========================= CALL OPTIONS =========================
     elif Options_Type == "call":
         exchange_code = "NFO"
         product_type = "options"
         option_type = "call"
-        data = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        if Loop_Type == "for":
+            data = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        elif Loop_Type == "while":
+            data = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
     # ========================= PUT OPTIONS =========================
     elif Options_Type == "put":
         exchange_code = "NFO"
         product_type = "options"
         option_type = "put"
-        data = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        if Loop_Type == "for":
+            data = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
+        elif Loop_Type == "while":
+            data = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, Options_Type, strike_price, stock_name)
     # ========================= BOTH CALL & PUT =========================
     elif Options_Type == "op":
         exchange_code = "NFO"
         product_type = "options"
-        data_call = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, "call", strike_price, stock_name)
-        data_put = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, "put", strike_price, stock_name)
+        if Loop_Type == "for":
+            data_call = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, "call", strike_price, stock_name)
+            data_put = fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, "put", strike_price, stock_name)
+        elif Loop_Type == "while":
+            data_call = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, "call", strike_price, stock_name)
+            data_put = fetch_options_while_loop(breeze, interval, Start_Date, End_Date, stock_code, exchange_code, product_type, Expiry_Date, "put", strike_price, stock_name)
         data = fetch_Merged_Data(data_call, data_put)
     else:
         print("❌ Invalid Option Type! (Use: 'ch', 'fu', 'call', 'put', or 'op')")
@@ -554,6 +570,7 @@ def Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, strike_price
 # Start_Date   = "01-10-2025 00:00"
 # End_Date     = "10"                  # 10 days बाद तक
 # interval     = "1minute"             # "1second", "1minute", "5minute", "30minute" , "1day".
-# data = Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, strike_price, Start_Date, End_Date, interval)
+# Loop_Type = "for"
+# data = Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, strike_price, Start_Date, End_Date, interval, Loop_Type)
 # print(tabulate(pd.concat([data.head(3), data.tail(3)]), headers="keys", tablefmt="psql"))
 #=========================================================================================================================================================================================================================================================================================
