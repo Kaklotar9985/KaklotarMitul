@@ -711,19 +711,30 @@ import pandas as pd
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data   get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data  get_Cash_Data
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_Cash_Data(breeze, stock_name, Start_Date, End_Date, interval="1minute",Loop_Type = "for"):
-    Expiry_Date  = End_Date
+from datetime import datetime, timedelta, time as dtime
+import pandas as pd
+
+def get_Cash_Data(breeze, stock_name, Start_Date, End_Date, interval="1minute", Loop_Type="for"):
+    Expiry_Date = End_Date
     Options_Type = "ch"
     strike_price = 0
-    Cash_Data = Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type,strike_price, Start_Date, End_Date, interval, Loop_Type)
+    Cash_Data = Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, strike_price, Start_Date, End_Date, interval, Loop_Type)
+
+    # ✅ Convert and filter by market hours
     Cash_Data["datetime"] = pd.to_datetime(Cash_Data["datetime"], format="%d-%m-%Y %H:%M", errors="coerce")
-    Cash_Data = Cash_Data[Cash_Data["datetime"].dt.time.between(time(9, 15), time(15, 30))]
+    Cash_Data = Cash_Data[Cash_Data["datetime"].dt.time.between(dtime(9, 15), dtime(15, 30))]
+
+    # ✅ Sort & format
     Cash_Data = Cash_Data.sort_values(by="datetime").reset_index(drop=True)
     Cash_Data["datetime"] = Cash_Data["datetime"].dt.strftime("%d-%m-%Y %H:%M")
-    if stock_name in ["nifty", "nifty bank"]:
-      if "ch_volume" in Cash_Data.columns:
-          Cash_Data.drop(columns=["ch_volume"], inplace=True)   
+
+    # ✅ Drop unwanted columns
+    if stock_name.lower() in ["nifty", "nifty bank"]:
+        if "ch_volume" in Cash_Data.columns:
+            Cash_Data.drop(columns=["ch_volume"], inplace=True)
+
     return Cash_Data
+
 # # Example usage
 # stock_name = "Nifty Bank"
 # Start_Date = "01-07-2025"
