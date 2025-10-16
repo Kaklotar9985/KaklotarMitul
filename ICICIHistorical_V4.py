@@ -714,7 +714,7 @@ def get_Cash_Data(breeze, stock_name, Start_Date, End_Date, interval="1minute",L
     Expiry_Date  = End_Date
     Options_Type = "ch"
     strike_price = 0
-    Cash_Data = ICICI.Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type,strike_price, Start_Date, End_Date, interval, Loop_Type)
+    Cash_Data = Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type,strike_price, Start_Date, End_Date, interval, Loop_Type)
     Cash_Data["datetime"] = pd.to_datetime(Cash_Data["datetime"], format="%d-%m-%Y %H:%M", errors="coerce")
     Cash_Data = Cash_Data[Cash_Data["datetime"].dt.time.between(time(9, 15), time(15, 30))]
     Cash_Data = Cash_Data.sort_values(by="datetime").reset_index(drop=True)
@@ -756,7 +756,7 @@ def get_Futures_Data(breeze, stock_name, Start_Date, End_Date, interval="1minute
     strike_price = 0
     all_data = []
     def fetch_data(start, end, expiry):
-        return ICICI.Read_Strike_Data(breeze, stock_name, expiry, Options_Type, strike_price,start.strftime("%d-%m-%Y"), end.strftime("%d-%m-%Y"), interval, Loop_Type)
+        return Read_Strike_Data(breeze, stock_name, expiry, Options_Type, strike_price,start.strftime("%d-%m-%Y"), end.strftime("%d-%m-%Y"), interval, Loop_Type)
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = [executor.submit(fetch_data, start, end, expiry) for (start, end, expiry) in date_ranges]
         for f in as_completed(futures):
