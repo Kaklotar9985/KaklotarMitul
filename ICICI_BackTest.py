@@ -1,3 +1,41 @@
+from importlib import import_module, reload, invalidate_caches
+from datetime import datetime, timedelta
+from IPython.display import clear_output
+from tabulate import tabulate
+import pandas as pd
+import threading
+import requests
+import zipfile
+import sys
+import os
+
+def Import_File(import_name):
+    try:
+        path = f"/content/importFile/{import_name}.py"
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        url = f"https://raw.githubusercontent.com/Kaklotar9985/KaklotarMitul/main/{import_name}.py"
+        response = requests.get(url)
+        response.raise_for_status()
+        with open(path, "wb") as file:
+            file.write(response.content)
+        module_dir = os.path.dirname(path)
+        if module_dir not in sys.path:
+            sys.path.append(module_dir)
+        invalidate_caches()  # importlib कैश साफ़ करें
+        if import_name in sys.modules:
+            del sys.modules[import_name]
+        imported_module = import_module(import_name)
+        reload(imported_module)
+        print(f"✅ Imported & Reloaded: {import_name}")
+        print("📦 Available Attributes:", dir(imported_module))
+        return imported_module
+    except Exception as e:
+        print(f"Import_File Function Error: {e}")
+        return None
+
+# यूज़ उदाहरण:
+ICICI = Import_File("ICICIHistorical_V4")
+
 banknifty_monthly_expiry = ['28-01-2021', '25-02-2021', '25-03-2021', '29-04-2021', '27-05-2021', '24-06-2021', '29-07-2021', '26-08-2021', '30-09-2021', '28-10-2021', '25-11-2021', '30-12-2021',
                             '27-01-2022', '24-02-2022', '31-03-2022', '28-04-2022', '26-05-2022', '30-06-2022', '28-07-2022', '25-08-2022', '29-09-2022', '27-10-2022', '24-11-2022', '29-12-2022',
                             '25-01-2023', '23-02-2023', '29-03-2023', '27-04-2023', '25-05-2023', '28-06-2023', '27-07-2023', '31-08-2023', '28-09-2023', '26-10-2023', '30-11-2023', '28-12-2023',
