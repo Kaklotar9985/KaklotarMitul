@@ -351,7 +351,8 @@ def fetch_options_For_loop(breeze, interval, Start_Date, End_Date, stock_code, e
     date_list = sorted([(Start_Date + timedelta(days=i)) for i in range((End_Date  - Start_Date).days + 1)
                        if (Start_Date + timedelta(days=i)).weekday() < 5], reverse=True)
     # ✅ ThreadPoolExecutor के साथ parallel fetch
-    with ThreadPoolExecutor(max_workers=min(200, len(date_list))) as executor:
+    # with ThreadPoolExecutor(max_workers=min(200, len(date_list))) as executor:
+    with ThreadPoolExecutor(max_workers=min(200, max(len(date_list)),1)) as executor:
         # futures = { executor.submit( get_historical_data_API, breeze, interval, date.replace(hour=9,minute=15,second=0), date.replace(hour=15,minute=30,second=0), stock_code, exchange_code, product_type, Expiry_Date,
         #                              Options_Type, strike_price, max_retries=3, delay=0, stock_name=stock_name ): date for date in date_list }
         futures = { executor.submit( get_historical_data_API, breeze, interval, date, date, stock_code, exchange_code, product_type, Expiry_Date,
