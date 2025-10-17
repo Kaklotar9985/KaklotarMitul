@@ -855,6 +855,9 @@ def get_Expiry(data, stock_name):
     if stock_name.lower() == "nifty":
         data["curr_w_expiry"] = data["datetime"].dt.date.map(lambda x: expiry_map[x]["curr_w_expiry"])
         data["next_w_expiry"] = data["datetime"].dt.date.map(lambda x: expiry_map[x]["next_w_expiry"])
+
+    data = data.sort_values(by="datetime").reset_index(drop=True)  # 🔹 Step 5: final formatting
+    data["datetime"] = data["datetime"].dt.strftime("%d-%m-%Y %H:%M")
     return data
 
 # # Example usage
