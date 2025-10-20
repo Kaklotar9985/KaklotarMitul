@@ -1346,7 +1346,7 @@ def Backtest_Positional_Function(breeze,Trade_No, Instruments_Detail, DateTime_D
 
             Data_Start_Date = pandas_date_format(Entry_DateTime, output_format="%d-%m-%Y %H:%M")
             Data_End_Date   = pandas_date_format(Exit_DateTime,  output_format="%d-%m-%Y %H:%M")
-            lod_Data = ICICI.Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, Strike_Price, Data_Start_Date, Data_End_Date, interval= "1minute" ,)#Loop_Type = "while")
+            lod_Data = Read_Strike_Data(breeze, stock_name, Expiry_Date, Options_Type, Strike_Price, Data_Start_Date, Data_End_Date, interval= "1minute" ,)#Loop_Type = "while")
             # print(lod_Data)
             if lod_Data is not None and not lod_Data.empty:
                 DATA = lod_Data
@@ -1642,7 +1642,7 @@ def get_Leg_List_remove(remove_leg_no):
 # 🔹 Backtest Function (सब Leg को Parallel Run कराना + Report Generate करना)
 # =====================================================================
 def BackTest(breeze, stock_name, Start_Date, End_Date, leg_list):
-    Symbol_Data = ICICI.get_Index_Data(breeze, stock_name, Start_Date, End_Date, interval="1minute", Loop_Type="for")
+    Symbol_Data = get_Index_Data(breeze, stock_name, Start_Date, End_Date, interval="1minute", Loop_Type="for")
     print(f"\n🔹 Total Candles Loaded: {len(Symbol_Data)}")
     print(f"🔹 Total Legs: {len(leg_list)}\n")
 
