@@ -774,33 +774,14 @@ Strike_Gep_List          = {"nifty" : 50, "nifty bank" : 100, "reliance" :10}
 #  Pandas_Date_Formet   Pandas_Date_Formet     Pandas_Date_Formet  Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet      Pandas_Date_Formet   Pandas_Date_Formet
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 from datetime import datetime, timedelta
-def pandas_date_format(date_input, output_format=None):
-    format_list = ["%d-%m-%Y", "%d-%m-%Y %H:%M", "%d-%m-%Y %H:%M:%S",
-                   "%Y-%m-%d", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
-    if isinstance(date_input, datetime):
-        date_obj = date_input
-    else:
-        for fmt in format_list:
-            try:
-                date_obj = datetime.strptime(date_input, fmt)
-                break
-            except ValueError:
-                continue
-        else:
-            return date_input
-
-    # ✅ Output format handle करो
-    if output_format is None:
-        return date_obj
-    else:
-        return date_obj.strftime(output_format)
-# Example
-# date = "2025-10-01 09:15:00"
-# output_format = "%d-%m-%Y %H:%M"
-# formatted_date = pandas_date_format(date, output_format)
-# print(formatted_date)
-#=========================================================================================================================================================================================================================================================================================
-
+def Pandas_Date_Formet(Date): # 🔹 Flexible Date Parsing Function
+    Formet_List = ["%d-%m-%Y", "%d-%m-%Y %H:%M", "%d-%m-%Y %H:%M:%S"]
+    for Date_Formet in Formet_List:
+        try:
+            return datetime.strptime(Date, Date_Formet)
+        except ValueError:
+            continue
+    return Date  # अगर कोई फॉर्मेट match न हो तो string 그대로 return
 #=========================================================================================================================================================================================================================================================================================
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1072,10 +1053,36 @@ def get_Index_Data(breeze, stock_name, Start_Date, End_Date, interval="1minute",
 # print(tabulate(pd.concat([Data.head(3), Data.tail(3)]), headers="keys", tablefmt="psql"))
 #=========================================================================================================================================================================================================================================================================================
 
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  Pandas_Date_Formet   Pandas_Date_Formet     Pandas_Date_Formet  Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet      Pandas_Date_Formet   Pandas_Date_Formet
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+from datetime import datetime, timedelta
+def pandas_date_format(date_input, output_format=None):
+    format_list = ["%d-%m-%Y", "%d-%m-%Y %H:%M", "%d-%m-%Y %H:%M:%S",
+                   "%Y-%m-%d", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
+    if isinstance(date_input, datetime):
+        date_obj = date_input
+    else:
+        for fmt in format_list:
+            try:
+                date_obj = datetime.strptime(date_input, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return date_input
 
-
-
-
+    # ✅ Output format handle करो
+    if output_format is None:
+        return date_obj
+    else:
+        return date_obj.strftime(output_format)
+# Example
+# date = "2025-10-01 09:15:00"
+# output_format = "%d-%m-%Y %H:%M"
+# formatted_date = pandas_date_format(date, output_format)
+# print(formatted_date)
+#=========================================================================================================================================================================================================================================================================================
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  get_market_open_dates   get_market_open_dates     get_market_open_dates  get_market_open_dates     get_market_open_dates     get_market_open_dates     get_market_open_dates     get_market_open_dates
@@ -1296,6 +1303,255 @@ def get_StrikePrice(stock_name, Options_Type, ATM, Target_Strike, DateTime = Non
 # print(Strike_Data)
 #___________________________________________________________________________________________________________________________________________________________________
 
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  Pandas_Date_Formet   Pandas_Date_Formet     Pandas_Date_Formet  Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet     Pandas_Date_Formet      Pandas_Date_Formet   Pandas_Date_Formet
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+from datetime import datetime, timedelta  #  
+def pandas_date_format(date_input, output_format=None):
+    format_list = ["%d-%m-%Y", "%d-%m-%Y %H:%M", "%d-%m-%Y %H:%M:%S",
+                   "%Y-%m-%d", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
+    if isinstance(date_input, datetime):
+        date_obj = date_input
+    else:
+        for fmt in format_list:
+            try:
+                date_obj = datetime.strptime(date_input, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return date_input
+
+    # ✅ Output format handle करो
+    if output_format is None:
+        return date_obj
+    else:
+        return date_obj.strftime(output_format)
+# Example
+# date = "2025-10-01 09:15:00"
+# output_format = "%d-%m-%Y %H:%M"
+# formatted_date = pandas_date_format(date, output_format)
+# print(formatted_date)
+#=========================================================================================================================================================================================================================================================================================
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  get_market_open_dates   get_market_open_dates     get_market_open_dates  get_market_open_dates     get_market_open_dates     get_market_open_dates     get_market_open_dates     get_market_open_dates
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+from datetime import datetime, timedelta
+import pandas as pd
+market_open_dates = None
+def get_market_open_dates(breeze):
+    global market_open_dates
+    if market_open_dates is None:
+        Start_Date = "01-01-2021"
+        today = datetime.today()
+        End_Date = today.strftime("%d-%m-%Y")
+
+        # Historical data से unique trading dates
+        data = Read_Strike_Data( breeze, stock_name="Nifty", Expiry_Date=End_Date, Options_Type="ch", strike_price=0,
+                                        Start_Date=Start_Date, End_Date=End_Date, interval="1day", Loop_Type="while" )
+        unique_dates = pd.to_datetime( data["datetime"], dayfirst=True ).dt.strftime("%d-%m-%Y").unique().tolist()
+        # आने वाले 15 दिन के weekdays (Mon–Fri)
+        date_list = [(today + timedelta(days=i)).strftime("%d-%m-%Y") for i in range(16)if (today + timedelta(days=i)).weekday() < 5]
+        # दोनों lists merge करके unique और sorted output बनाओ
+        all_dates = sorted(set(unique_dates + date_list),key=lambda x: datetime.strptime(x, "%d-%m-%Y"))
+        market_open_dates = all_dates
+# Example usage
+# get_market_open_dates(breeze)
+# print(market_open_dates)
+
+# Get_BTST_Date  Get_BTST_Date  Get_BTST_Date  Get_BTST_Date  Get_BTST_Date  Get_BTST_Date  Get_BTST_Date  Get_BTST_Date
+def Get_BTST_Date(breeze, Date, Get_Day_No = 1,):
+    global market_open_dates
+    try :
+        if market_open_dates is None:
+           get_market_open_dates(breeze)
+        if Get_Day_No == 0 :
+           return Date
+        Date = pd.to_datetime(Date, format="%d-%m-%Y")
+        market_open_dates = pd.to_datetime(pd.Series(market_open_dates), format="%d-%m-%Y")
+        filtered_dates = market_open_dates[market_open_dates > Date].sort_values()
+        filtered_dates = filtered_dates.dt.strftime("%d-%m-%Y").tolist()
+        get_Date = filtered_dates[(int(Get_Day_No) - 1)]
+        return get_Date
+    except Exception as e:
+        print(f"Get_BTST_Date Function Error: {e}")
+# # Example usage
+# Date = "10-10-2025"
+# Get_Day_No = 1
+# BTST_Date = Get_BTST_Date(Date)
+# print(BTST_Date)
+#=========================================================================================================================================================================================================================================================================================
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate#  Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate   Brokerage_Calculate
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def Brokerage_Calculate(buy_price, sell_price, quantity, Options_Type="OP", Min_Brokerage=20):
+    try:
+        op_type = Options_Type.strip().lower()
+        turnover = (abs(buy_price) + abs(sell_price)) * quantity
+
+        # Initialize values
+        brokerage = 0.0
+        stt = 0.0
+        transaction_charges = 0.0
+        sebi_charges = 0.0
+        stamp_duty = 0.0
+
+        if op_type in ["fu", "fut", "futures"]:
+            one_side_brokerage = min(0.0003 * turnover, Min_Brokerage)
+            brokerage = one_side_brokerage * 2
+            stt = 0.0002 * sell_price * quantity
+            transaction_charges = 0.0000183 * turnover  # you used this
+            sebi_charges = (10 / 10000000) * turnover
+            stamp_duty = round((0.00002 * buy_price * quantity), 0)
+
+        # OPTIONS
+        elif op_type in ["op", "opt", "option", "call", "put"]:
+            brokerage = Min_Brokerage * 2
+            stt = 0.00055 * sell_price * quantity
+            transaction_charges = 0.000375 * turnover
+            sebi_charges = (10 / 10000000) * turnover
+            stamp_duty = round((0.00043 * buy_price * quantity), 0)
+        else:
+            raise ValueError(f"Invalid Options_Type: {Options_Type}")
+        gst = 0.18 * (brokerage + transaction_charges + sebi_charges)
+        total_charges = brokerage + stt + transaction_charges + sebi_charges + gst + stamp_duty
+        return round(total_charges, 2)
+
+    except Exception as e:
+        print(f"Brokerage_Calculate Function Error: {e}")
+        return 0.0
+
+# # Example usage
+# futures_result = Brokerage_Calculate(buy_price=25000, sell_price=25000, quantity=450, Options_Type="FU")
+# print(f"Futures Charges: {futures_result:.2f}")
+# options_result = Brokerage_Calculate(buy_price=200, sell_price=200, quantity=75, Options_Type="OP")
+# print(f"Options Charges: {options_result:.2f}")
+#=========================================================================================================================================================================================================================================================================================
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  calculate_drawdown   calculate_drawdown   calculate_drawdown   calculate_drawdown   calculate_drawdown   calculate_drawdown#  calculate_drawdown   calculate_drawdown   calculate_drawdown   calculate_drawdown   calculate_drawdown   calculate_drawdown   calculate_drawdown
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+import pandas as pd
+from tabulate import tabulate
+def calculate_drawdown(data, trade_no):
+    # Handle 'ALL' or per-trade calculation
+    if isinstance(trade_no, str) and trade_no.lower() == "all":
+        trade_data = data.copy()
+    else:
+        trade_data = data[data["Trade_No"] == trade_no].copy()
+
+    trade_data = trade_data.sort_values(by="Entry_DateTime").reset_index(drop=True)
+    drawdown_col = f"Drawdown_{trade_no}"
+    trade_data[drawdown_col] = 0.0
+
+    running_total = 0.0
+    for i in range(len(trade_data)):
+        running_total += trade_data.loc[i, "PNL"]
+        trade_data.loc[i, drawdown_col] = round(min(running_total, 0.0), 2)
+
+    # For ALL, no trade filtering key
+    if isinstance(trade_no, str) and trade_no.lower() == "all":
+        return trade_data[[drawdown_col]]
+    else:
+        return trade_data[["Trade_No", drawdown_col]]
+#=========================================================================================================================================================================================================================================================================================
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  get_Analysis_Data   get_Analysis_Data   get_Analysis_Data   get_Analysis_Data   get_Analysis_Data   get_Analysis_Data#  get_Analysis_Data   get_Analysis_Data   get_Analysis_Data   get_Analysis_Data   get_Analysis_Data   get_Analysis_Data   get_Analysis_Data
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def get_Analysis_Data(trade_log):
+    try:
+        Analysis_Data = pd.DataFrame(trade_log).copy()
+        Analysis_Data["Trade_No"] = Analysis_Data["Trade_No"].astype(str)
+
+        # Convert to datetime
+        Analysis_Data["Entry_DateTime"] = pd.to_datetime(Analysis_Data["Entry_DateTime"], format="%d-%m-%Y %H:%M")
+        Analysis_Data["Exit_DateTime"]  = pd.to_datetime(Analysis_Data["Exit_DateTime"],  format="%d-%m-%Y %H:%M")
+        Analysis_Data["Expiry_Date"]    = pd.to_datetime(Analysis_Data["Expiry_Date"],    format="%d-%m-%Y")
+        Analysis_Data.sort_values(by="Entry_DateTime", inplace=True)
+        Analysis_Data.reset_index(drop=True, inplace=True)
+
+        # === Overall Drawdown ===
+        Analysis_Data["Drawdown_ALL"] = calculate_drawdown(Analysis_Data, "ALL")["Drawdown_ALL"].values
+
+        # === Fill missing drawdowns ===
+        drawdown_cols = [c for c in Analysis_Data.columns if c.startswith("Drawdown_")]
+        Analysis_Data[drawdown_cols] = Analysis_Data[drawdown_cols].fillna(0.0)
+
+        # === Expiry days difference ===
+        Analysis_Data["Ex_to_Day"] = (Analysis_Data["Expiry_Date"] - Analysis_Data["Entry_DateTime"]).dt.days
+
+        # === Add Month / Quarter / Year ===
+        Analysis_Data["Month"]   = Analysis_Data["Entry_DateTime"].dt.month
+        Analysis_Data["Quarter"] = Analysis_Data["Entry_DateTime"].dt.quarter
+        Analysis_Data["Year"]    = Analysis_Data["Entry_DateTime"].dt.year
+
+        # === Convert datetime to string for display ===
+        Analysis_Data["Entry_DateTime"] = Analysis_Data["Entry_DateTime"].dt.strftime('%d-%m-%Y %H:%M')
+        Analysis_Data["Exit_DateTime"]  = Analysis_Data["Exit_DateTime"].dt.strftime('%d-%m-%Y %H:%M')
+        Analysis_Data["Expiry_Date"]    = Analysis_Data["Expiry_Date"].dt.strftime('%d-%m-%Y')
+
+        return Analysis_Data
+
+    except Exception as e:
+        print(f"get_Analysis_Data Function Error : {e}")
+        return None
+# # Example usage
+# Analysis_Data = get_Analysis_Data(trade_log)
+# print(tabulate(Analysis_Data, headers="keys", tablefmt="pretty", showindex=False))
+#=========================================================================================================================================================================================================================================================================================
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  get_StrikePrice   get_StrikePrice   get_StrikePrice   get_StrikePrice   get_StrikePrice   get_StrikePrice#  get_StrikePrice   get_StrikePrice   get_StrikePrice   get_StrikePrice   get_StrikePrice   get_StrikePrice   get_StrikePrice
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def get_StrikePrice(stock_name, Options_Type, ATM, Target_Strike, DateTime = None, Expiry= None, column_Type = "open", Strike_No = 20,):
+    try:
+        Strike_Gep = get_Strike_Gep(stock_name)
+        Target_Type = type(Target_Strike)
+        if Target_Type in [int,float]:
+          Face_values = "options_chain"
+          DATA = get_Options_Chain(stock_name, DateTime, Expiry, ATM, Strike_No, Face_values, "open")
+          Prim_List = DATA[f"{Options_Type.lower()}_{column_Type.lower()}"].tolist() if hasattr(DATA["call_open"], 'tolist') else list(DATA["call_open"])
+          nearest_Prim = min(Prim_List, key=lambda x: abs(x - Target_Strike))
+          filtered_data = DATA[DATA[f"{Options_Type.lower()}_{column_Type.lower()}"] == nearest_Prim]
+          if not filtered_data.empty:
+              strike_price =  filtered_data["strike_price"].iloc[0]
+              Strike_Data = {"Strike": int(strike_price), "Premium": float(nearest_Prim)}
+          else:
+                Strike_Data = {"Strike": None, "Premium": None}
+          return Strike_Data
+        elif Target_Type == str:
+          parts = Target_Strike.split('-')
+          letters = str(parts[0])
+          number = int(parts[1])
+          if Options_Type.lower() == "call":
+              Value = ATM - (number * Strike_Gep) if letters.lower() == "itm" else ATM + (number * Strike_Gep) if letters.lower() == "otm" else ATM
+          elif Options_Type.lower() == "put":
+              Value = ATM + (number * Strike_Gep) if letters.lower() == "itm" else ATM - (number * Strike_Gep) if letters.lower() == "otm" else ATM
+          return {"Strike": Value, "Premium": None}
+    except Exception as e:
+        print(f"get_StrikePrice Function Error: {e}")
+        return {"Strike": None, "Premium": None}
+
+# Example usage:
+# Symbol = "nifty"
+# DateTime = "26-12-2024 09:30"
+# Expiry = "26-12-2024"
+# ATM = 23800
+# Options_Type = "call"
+# Target_Strike = "ATM-00"  #  "otm-2"
+# Strike_Data = get_StrikePrice(Symbol,Options_Type, ATM, Target_Strike, DateTime, Expiry, column_Type = "open", Strike_No = 20, Strike_Gep = 50)
+# print(Strike_Data)
+# Symbol = "nifty"
+# ATM = 23800
+# Options_Type = "call"
+# Target_Strike = "atm-00"  #  "otm-2", "itm-02" "atm-00"
+# Strike_Data = get_StrikePrice(Symbol,Options_Type, ATM, Target_Strike,)["Strike"]
+# print(Strike_Data)
+#___________________________________________________________________________________________________________________________________________________________________
 
 import os
 os.makedirs("BackTest_Data", exist_ok=True)
@@ -1525,6 +1781,7 @@ def Backtest_Positional_Function(breeze,Trade_No, Instruments_Detail, DateTime_D
 
     return Trade_List
 #___________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tabulate import tabulate
 from tqdm import tqdm
@@ -1621,7 +1878,7 @@ def leg_list_No_Clear() :
 def Red_leg_list():
     global leg_list
     return leg_list
-    
+
 def get_Leg_List_add(Entry_Settings, Instruments_Detail, Exit_Logic, Tradeing_Time):
     global leg_No
     leg_No += 1
@@ -1701,6 +1958,7 @@ def BackTest(breeze, stock_name, Start_Date, End_Date, leg_list):
 # # 🚀 Run Backtest
 # Data = BackTest(breeze, stock_name, Start_Date, End_Date, leg_list)
 # print(tabulate(pd.concat([Data.head(3), Data.tail(3)]), headers="keys", tablefmt="psql"))
+
 
 
 
