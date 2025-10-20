@@ -1618,7 +1618,10 @@ def leg_list_No_Clear() :
     global leg_No
     leg_list = []
     leg_No = 0
-
+def Red_leg_list():
+    global leg_list
+    return leg_list
+    
 def get_Leg_List_add(Entry_Settings, Instruments_Detail, Exit_Logic, Tradeing_Time):
     global leg_No
     leg_No += 1
