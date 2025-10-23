@@ -1219,7 +1219,7 @@ def Backtest_Positional_Function(breeze,Trade_No, Instruments_Detail, DateTime_D
     StopLoss_Percent  = float(Exit_Logic["StopLoss"])
     Target_Percent    = float(Exit_Logic["Target"])
     TSL_Percent       = float(Exit_Logic["TSL"])
-    Max_ReEntry       = int(max(Exit_Logic["Re_Entry"], 1))
+    Max_ReEntry       = int(Exit_Logic["Re_Entry"]) + 1
     if Max_ReEntry > 1 :
       Re_Entry_End_Time = str(Exit_Logic["Re_Entry_End_Time"])
       # Re_Entry_End_Date = Get_BTST_Date(breeze,Entry_Date,int(Exit_Logic["Re_Entry_End_Date"]))
@@ -1240,7 +1240,7 @@ def Backtest_Positional_Function(breeze,Trade_No, Instruments_Detail, DateTime_D
     Entry_Price = None
     ReEntry     = 0
     Trade_No    = (Trade_No + 0.1)
-    while ReEntry < Max_ReEntry:
+    while ReEntry <= Max_ReEntry:
         if DATA is None:
 
             Data_Start_Date = pandas_date_format(Entry_DateTime, output_format="%d-%m-%Y %H:%M")
