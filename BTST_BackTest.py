@@ -1240,7 +1240,7 @@ def Backtest_Positional_Function(breeze,Trade_No, Instruments_Detail, DateTime_D
     Entry_Price = None
     ReEntry     = 0
     Trade_No    = (Trade_No + 0.1)
-    while ReEntry <= Max_ReEntry:
+    while ReEntry < Max_ReEntry:
         if DATA is None:
 
             Data_Start_Date = pandas_date_format(Entry_DateTime, output_format="%d-%m-%Y %H:%M")
