@@ -710,13 +710,50 @@ def Read_Strike_Data(breeze, stock_name, Expiry_Date=None, Options_Type=None, st
 
 
 
+
+
 from datetime import datetime, timedelta  # #
 from tabulate import tabulate
 from io import StringIO
 import pandas as pd
 import requests
 import base64
+import time
 import os
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# GitHub_rate_limiter   GitHub_rate_limiter   GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+GitHub_API_CALL_LIMIT = 5000       # GitHub authenticated limit per hour
+GitHub_API_Call_Count = 0
+GitHub_API_Start_Time = time.time()
+def GitHub_set_api_limit(limit):
+    global GitHub_API_CALL_LIMIT
+    GitHub_API_CALL_LIMIT = limit
+def GitHub_rate_limiter():
+    global GitHub_API_Call_Count, GitHub_API_Start_Time
+    now = time.time()
+    elapsed = now - GitHub_API_Start_Time
+    if elapsed >= 3600:
+        GitHub_API_Call_Count = 0
+        GitHub_API_Start_Time = now
+    GitHub_API_Call_Count += 1
+    if GitHub_API_Call_Count > GitHub_API_CALL_LIMIT:
+        sleep_time = 3600 - elapsed
+        if sleep_time > 0:
+            print(f"⏳ GitHub API limit reached → Waiting for {int(sleep_time)} seconds...")
+            time.sleep(sleep_time)
+        # Reset after waiting
+        GitHub_API_Call_Count = 1
+        GitHub_API_Start_Time = time.time()
+
+# # Example usage
+# for i in range(5001):   # 15 बार call करेंगे
+#     GitHub_rate_limiter()
+#     clear_output(wait=True)
+#     print(f"API Call {i+1} done at {time.strftime('%H:%M:%S')}")
+#     time.sleep(0.005)   # हर call के बीच 0.5s का gap रखा      
+#=======================================================================================================================================================================
+
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  upload_csv_to_github   upload_csv_to_github   upload_csv_to_github   upload_csv_to_github   upload_csv_to_github   upload_csv_to_github#  upload_csv_to_github   upload_csv_to_github   upload_csv_to_github   upload_csv_to_github   upload_csv_to_github   upload_csv_to_github
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -724,6 +761,7 @@ def delete_github_folder(GitHub_API, path):
     headers   = GitHub_API['headers']
     owner     = GitHub_API['owner']
     repo_name = GitHub_API['repo_name']
+    GitHub_rate_limiter()
     # Step 1: Get folder info
     url = f"https://api.github.com/repos/{owner}/{repo_name}/contents/{path}"
     response = requests.get(url, headers=headers)
@@ -757,7 +795,7 @@ def create_github_folder(GitHub_API, path, Print=None, retry=5):
     headers   = GitHub_API['headers']
     owner     = GitHub_API['owner']
     repo_name = GitHub_API['repo_name']
-
+    GitHub_rate_limiter()
     # प्रत्येक folder को README.md से represent किया जाएगा
     url = f"https://api.github.com/repos/{owner}/{repo_name}/contents/{path}/README.md"
     content = base64.b64encode(b"This is an auto-created folder").decode("utf-8")
@@ -822,7 +860,7 @@ def Upload_GitHub_Options_Data(GitHub_API, local_path, max_retry=5, wait_time=2)
     headers   = GitHub_API['headers']
     owner     = GitHub_API['owner']
     repo_name = GitHub_API['repo_name']
-
+    GitHub_rate_limiter()
     parts = local_path.split("/")                                 # Split by "/"
     stock_name = parts[0]                                         # stock name
     file_name = parts[1].replace(".csv.gz", "")                   # remove extension
@@ -894,7 +932,7 @@ def Read_GitHub_Options_Data(GitHub_API, stock_name, Expiry_Date, strike_price,
     headers   = GitHub_API['headers']
     owner     = GitHub_API['owner']
     repo_name = GitHub_API['repo_name']
-
+    GitHub_rate_limiter()
     safe_stock = re.sub(r'[^A-Za-z0-9_-]', '_', stock_name.lower())
     Expiry_Date = pandas_date_format(Expiry_Date, "%d-%m-%Y")
     day, month, year = Expiry_Date.split("-")
@@ -1175,14 +1213,16 @@ def GitHub_Multi_download(GitHub_API, stock_name):
 import datetime as dt
 import time
 Downloaded_Data_Liat = []
-def get_Downloaded_Data(breeze, GitHub_API, stock_name, Expiry_Date, strike_price, Options_Type, Start_Date, End_Date):
+def get_Downloaded_Data(breeze, GitHub_API, stock_name, Expiry_Date, strike_price, Options_Type, Start_Date=60, End_Date=0, GitHub_Update=True):
     safe_stock = re.sub(r'[^A-Za-z0-9_-]', '_', stock_name.lower())
     path = f"/content/{safe_stock}/{Expiry_Date}_{strike_price}_{Options_Type}.csv.gz"
-    if Start_Date and End_Date:
-      Start_Date = pd.to_datetime(Start_Date, dayfirst=True)
-      End_Date   = pd.to_datetime(End_Date,   dayfirst=True)
-      if End_Date.time() == dt.time(0, 0, 0):
-        End_Date = dt.datetime.combine(End_Date.date(), dt.time(15, 30, 0))
+    
+    Expiry_Date, Start_Date, End_Date = get_start_end_expiry_formet(Expiry_Date, Start_Date, End_Date)
+    Start_Date = pd.to_datetime(Start_Date, dayfirst=True)
+    End_Date   = pd.to_datetime(End_Date,   dayfirst=True)
+    if End_Date.time() == dt.time(0, 0, 0):
+      End_Date = dt.datetime.combine(End_Date.date(), dt.time(15, 30, 0))
+
     try:
       Data = pd.read_csv(path,compression="gzip",low_memory=False,)
     except:
@@ -1196,12 +1236,31 @@ def get_Downloaded_Data(breeze, GitHub_API, stock_name, Expiry_Date, strike_pric
     none_count = Data['datetime'].isna().sum()
     if none_count > 0:
        print("❌ Total datetime None (NaT) values:", none_count)
-
     if Start_Date and End_Date:
       mask = (Data['datetime'] >= Start_Date) & (Data['datetime'] <= End_Date)
       Data = Data.loc[mask]
     if Data.empty:
         return Data
+    
+    if GitHub_Update :
+        Downloaded_Data_Date_List = sorted(Data["datetime"].dt.date.unique())
+        Teding_Date_List = [d.date() for d in Get_BTST_Date(breeze, Start_Date=Start_Date, End_Date=End_Date)]
+        No_Data_Date_List = [d for d in Teding_Date_List if d not in Downloaded_Data_Date_List]
+        No_Data_Date_List = sorted([dt.datetime.combine(d, dt.datetime.min.time()) for d in No_Data_Date_List])
+        remove_date = []
+        remove_date_dt = [dt.datetime.strptime(d, "%d-%m-%Y") for d in remove_date]
+        Missing_Dates = [d for d in No_Data_Date_List if d not in remove_date_dt]
+        if Missing_Dates and breeze and GitHub_API :
+            Data = get_Historical_Data(breeze, GitHub_API, stock_name, Expiry_Date, strike_price, Options_Type, Start_Date, End_Date)
+            Data['datetime'] = pandas_date_format(Data['datetime'])
+            none_count = Data['datetime'].isna().sum()
+            if none_count > 0:
+              print("❌ Total datetime None (NaT) values:", none_count)
+            if Start_Date and End_Date:
+              mask = (Data['datetime'] >= Start_Date) & (Data['datetime'] <= End_Date)
+              Data = Data.loc[mask]
+            if Data.empty:
+                return Data
 
     if not Data['datetime'].is_monotonic_increasing:
         Data = Data.sort_values('datetime', kind='mergesort')
@@ -1211,7 +1270,7 @@ def get_Downloaded_Data(breeze, GitHub_API, stock_name, Expiry_Date, strike_pric
         Data['expiry_date'] = pd.to_datetime(Data['expiry_date'], dayfirst=True, errors="coerce").dt.strftime("%d-%m-%Y")
     return Data
 
-# # Example usage
+# Example usage
 # Expiry_Date = "28-10-2025"
 # stock_name_list = [{"Nifty": 26000},{"Nifty Bank": 58000},{"reliance": 1500},]
 # Options_List = ["ch", "fu", "call", "put"]
@@ -1230,7 +1289,6 @@ def get_Downloaded_Data(breeze, GitHub_API, stock_name, Expiry_Date, strike_pric
 #         else:
 #             print(f"\n⚠️ No data found → {stock_name} | {Options_Type} | strike {strike_price}")
 ##=========================================================================================================================================================================================================================================================================================
-
 
 
 
@@ -1403,7 +1461,86 @@ def get_Index_Data(breeze, GitHub_API, stock_name, Start_Date, End_Date,):
 # print(tabulate(pd.concat([Data.head(3), Data.tail(3)]), headers="keys", tablefmt="psql"))
 #=========================================================================================================================================================================================================================================================================================
 
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update#  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from IPython.display import clear_output
+from tqdm import tqdm
+def get_strike_list(stock_name, Expiry_Date, OTM, ITM, Strike_Gep):
+    try:
+      Data = get_Downloaded_Data(breeze, GitHub_API, stock_name=stock_name, Expiry_Date=Expiry_Date, strike_price=0, Options_Type="ch", Start_Date=Start_Date, End_Date=End_Date)
+      Max_High = round((Data["ch_high"].max() / Strike_Gep), 0) * Strike_Gep
+      Min_Low  = round((Data["ch_low"].min() / Strike_Gep), 0) * Strike_Gep
+      call_Max_High = Max_High + (Strike_Gep * OTM)
+      call_Min_Low  = Min_Low  - (Strike_Gep * ITM)
+      put_Max_High  = Max_High + (Strike_Gep * ITM)
+      put_Min_Low   = Min_Low  - (Strike_Gep * OTM)
+      call_strike_list = list(range(int(call_Min_Low), int(call_Max_High + Strike_Gep), int(Strike_Gep)))
+      put_strike_list  = list(range(int(put_Min_Low),  int(put_Max_High + Strike_Gep), int(Strike_Gep)))
+      return {"call": call_strike_list, "put": put_strike_list}
+    except Exception as e:
+        print(f"Error ({stock_name}, {Expiry_Date}): {e}")
+        return None
+def get_Expirys_strike_List(stock_name, Expirys_List, OTM, ITM, Strike_Gep):
+    Expirys_strike_List = {}
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(get_strike_list, stock_name, Expiry_Date, OTM, ITM, Strike_Gep): Expiry_Date for Expiry_Date in Expirys_List}
+        for future in as_completed(futures):
+            expiry = futures[future]
+            result = future.result()   # only once
+            if result is not None:
+                Expirys_strike_List[expiry] = result
+    return Expirys_strike_List
 
+def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry_Type, Start_Date, End_Date, OTM=30, ITM=15, Show_Print=False):
+    Strike_Gep          = get_Strike_Gep(stock_name)
+    Expirys_List        = get_Symbol_Expiry(Dates=None, Symbol=stock_name, Expiry_Period=Expiry_Period, Expiry_Type=Expiry_Type, Start_Date=Start_Date, End_Date=End_Date)
+    Expirys_strike_List = get_Expirys_strike_List(stock_name, Expirys_List, OTM, ITM, Strike_Gep)
+
+    for Expiry_Date in tqdm(Expirys_List, desc="Processing Expiries"):
+        if Expiry_Date not in Expirys_strike_List:
+            print(f"No strike list for expiry {Expiry_Date}, skipping.")
+            continue
+        for Options_Type, strike_list in Expirys_strike_List[Expiry_Date].items():
+            if not strike_list:
+                print(f"No strikes for {Options_Type} on {Expiry_Date}, skipping.")
+                continue
+
+            with ThreadPoolExecutor(max_workers=max(len(strike_list), 1)) as executor:
+                futures = {executor.submit(get_Downloaded_Data,breeze,GitHub_API,stock_name,Expiry_Date,strike_price,Options_Type, Start_Date=60, End_Date=0):
+                                          strike_price for strike_price in strike_list}
+
+                for future in as_completed(futures):
+                    strike = futures[future]   # THIS is the strike_price for this future
+                    try:
+                        Data = future.result()
+                    except Exception as e:
+                        print(f"Exception fetching ({Options_Type}, {strike}, {Expiry_Date}): {e}")
+                        continue
+                    clear_output(wait=True)
+                    if Show_Print :
+                        if Data is not None and len(Data) > 0:
+                            print("\n", Options_Type.upper(), strike, Expiry_Date, "ok")
+                            try:
+                                print(tabulate(pd.concat([Data.head(1), Data.tail(1)]), headers="keys", tablefmt="psql"))
+                            except Exception as e:
+                                print(f"Error printing data for ({Options_Type}, {strike}, {Expiry_Date}): {e}")
+                        else:
+                            print(f"Error (no data) ({Options_Type}, {strike}, {Expiry_Date})")
+    print("\n\nAll Data Download Completed ✔")
+
+
+# # Example usage
+# stock_name     = "reliance"         #"nifty", "nifty bank" "reliance"
+# Expiry_Period  = "Monthly"       # "Weekiy" , "Monthly"
+# Expiry_Type    = "Current"       # "Current", "Next"
+# Start_Date     = "01-01-2025"
+# End_Date       = "31-12-2025"
+# OTM         = 30
+# ITM         = 15
+# get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry_Type, Start_Date, End_Date, OTM, ITM)
+#=========================================================================================================================================================================================================================================================================================
 
 
 
