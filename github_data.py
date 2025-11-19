@@ -1472,7 +1472,8 @@ from IPython.display import clear_output
 from tqdm import tqdm
 def get_strike_list(breeze, GitHub_API, stock_name, Expiry_Date, OTM, ITM, Strike_Gep):
     try:
-      Data = get_Downloaded_Data(breeze, GitHub_API, stock_name=stock_name, Expiry_Date=Expiry_Date, strike_price=0, Options_Type="ch", Start_Date=60, End_Date=0)
+      Data = get_Historical_Data(breeze, GitHub_API, stock_name=stock_name, Expiry_Date=Expiry_Date, strike_price=0, Options_Type="fu", Start_Date=60, End_Date=0)
+      Data = get_Historical_Data(breeze, GitHub_API, stock_name=stock_name, Expiry_Date=Expiry_Date, strike_price=0, Options_Type="ch", Start_Date=60, End_Date=0)
       Max_High = round((Data["ch_high"].max() / Strike_Gep), 0) * Strike_Gep
       Min_Low  = round((Data["ch_low"].min() / Strike_Gep), 0) * Strike_Gep
       call_Max_High = Max_High + (Strike_Gep * OTM)
