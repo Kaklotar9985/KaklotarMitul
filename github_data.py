@@ -1511,7 +1511,7 @@ def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry
                 continue
 
             with ThreadPoolExecutor(max_workers=max(len(strike_list), 1)) as executor:
-                futures = {executor.submit(get_Downloaded_Data,breeze,GitHub_API,stock_name,Expiry_Date,strike_price,Options_Type, Start_Date=60, End_Date=0):
+                futures = {executor.submit(get_Historical_Data,breeze,GitHub_API,stock_name,Expiry_Date,strike_price,Options_Type, Start_Date=60, End_Date=0):  # get_Historical_Data  get_Downloaded_Data
                                           strike_price for strike_price in strike_list}
 
                 for future in as_completed(futures):
