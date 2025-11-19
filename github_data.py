@@ -1463,6 +1463,7 @@ def get_Index_Data(breeze, GitHub_API, stock_name, Start_Date, End_Date,):
 
 
 
+
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update#  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1471,7 +1472,7 @@ from IPython.display import clear_output
 from tqdm import tqdm
 def get_strike_list(breeze, GitHub_API, stock_name, Expiry_Date, OTM, ITM, Strike_Gep):
     try:
-      Data = get_Downloaded_Data(breeze, GitHub_API, stock_name=stock_name, Expiry_Date=Expiry_Date, strike_price=0, Options_Type="ch", Start_Date=Start_Date, End_Date=End_Date)
+      Data = ICICI.get_Downloaded_Data(breeze, GitHub_API, stock_name=stock_name, Expiry_Date=Expiry_Date, strike_price=0, Options_Type="ch", Start_Date=60, End_Date=0)
       Max_High = round((Data["ch_high"].max() / Strike_Gep), 0) * Strike_Gep
       Min_Low  = round((Data["ch_low"].min() / Strike_Gep), 0) * Strike_Gep
       call_Max_High = Max_High + (Strike_Gep * OTM)
@@ -1496,8 +1497,8 @@ def get_Expirys_strike_List(breeze, GitHub_API, stock_name, Expirys_List, OTM, I
     return Expirys_strike_List
 
 def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry_Type, Start_Date, End_Date, OTM=30, ITM=15, Show_Print=False):
-    Strike_Gep          = get_Strike_Gep(stock_name)
-    Expirys_List        = get_Symbol_Expiry(Dates=None, Symbol=stock_name, Expiry_Period=Expiry_Period, Expiry_Type=Expiry_Type, Start_Date=Start_Date, End_Date=End_Date)
+    Strike_Gep          = ICICI.get_Strike_Gep(stock_name)
+    Expirys_List        = ICICI.get_Symbol_Expiry(Dates=None, Symbol=stock_name, Expiry_Period=Expiry_Period, Expiry_Type=Expiry_Type, Start_Date=Start_Date, End_Date=End_Date)
     Expirys_strike_List = get_Expirys_strike_List(breeze, GitHub_API, stock_name, Expirys_List, OTM, ITM, Strike_Gep)
 
     for Expiry_Date in tqdm(Expirys_List, desc="Processing Expiries"):
@@ -1510,7 +1511,7 @@ def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry
                 continue
 
             with ThreadPoolExecutor(max_workers=max(len(strike_list), 1)) as executor:
-                futures = {executor.submit(get_Downloaded_Data,breeze,GitHub_API,stock_name,Expiry_Date,strike_price,Options_Type, Start_Date=60, End_Date=0):
+                futures = {executor.submit(ICICI.get_Downloaded_Data,breeze,GitHub_API,stock_name,Expiry_Date,strike_price,Options_Type, Start_Date=60, End_Date=0):
                                           strike_price for strike_price in strike_list}
 
                 for future in as_completed(futures):
@@ -1543,6 +1544,7 @@ def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry
 # ITM         = 15
 # get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry_Type, Start_Date, End_Date, OTM, ITM)
 #=========================================================================================================================================================================================================================================================================================
+
 
 
 
