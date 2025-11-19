@@ -1462,6 +1462,7 @@ def get_Index_Data(breeze, GitHub_API, stock_name, Start_Date, End_Date,):
 #=========================================================================================================================================================================================================================================================================================
 
 
+
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update#  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1483,7 +1484,7 @@ def get_strike_list(breeze, GitHub_API, stock_name, Expiry_Date, OTM, ITM, Strik
     except Exception as e:
         print(f"Error ({stock_name}, {Expiry_Date}): {e}")
         return None
-def get_Expirys_strike_List(stock_name, Expirys_List, OTM, ITM, Strike_Gep):
+def get_Expirys_strike_List(breeze, GitHub_API, stock_name, Expirys_List, OTM, ITM, Strike_Gep):
     Expirys_strike_List = {}
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(get_strike_list, breeze, GitHub_API, stock_name, Expiry_Date, OTM, ITM, Strike_Gep): Expiry_Date for Expiry_Date in Expirys_List}
@@ -1497,7 +1498,7 @@ def get_Expirys_strike_List(stock_name, Expirys_List, OTM, ITM, Strike_Gep):
 def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry_Type, Start_Date, End_Date, OTM=30, ITM=15, Show_Print=False):
     Strike_Gep          = get_Strike_Gep(stock_name)
     Expirys_List        = get_Symbol_Expiry(Dates=None, Symbol=stock_name, Expiry_Period=Expiry_Period, Expiry_Type=Expiry_Type, Start_Date=Start_Date, End_Date=End_Date)
-    Expirys_strike_List = get_Expirys_strike_List(stock_name, Expirys_List, OTM, ITM, Strike_Gep)
+    Expirys_strike_List = get_Expirys_strike_List(breeze, GitHub_API, stock_name, Expirys_List, OTM, ITM, Strike_Gep)
 
     for Expiry_Date in tqdm(Expirys_List, desc="Processing Expiries"):
         if Expiry_Date not in Expirys_strike_List:
@@ -1542,6 +1543,8 @@ def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry
 # ITM         = 15
 # get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry_Type, Start_Date, End_Date, OTM, ITM)
 #=========================================================================================================================================================================================================================================================================================
+
+
 
 
 
