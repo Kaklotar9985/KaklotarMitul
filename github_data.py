@@ -1461,13 +1461,14 @@ def get_Index_Data(breeze, GitHub_API, stock_name, Start_Date, End_Date,):
 # print(tabulate(pd.concat([Data.head(3), Data.tail(3)]), headers="keys", tablefmt="psql"))
 #=========================================================================================================================================================================================================================================================================================
 
+
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update#  get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update   get_GitHub_Data_Update
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from IPython.display import clear_output
 from tqdm import tqdm
-def get_strike_list(stock_name, Expiry_Date, OTM, ITM, Strike_Gep):
+def get_strike_list(breeze, GitHub_API, stock_name, Expiry_Date, OTM, ITM, Strike_Gep):
     try:
       Data = get_Downloaded_Data(breeze, GitHub_API, stock_name=stock_name, Expiry_Date=Expiry_Date, strike_price=0, Options_Type="ch", Start_Date=Start_Date, End_Date=End_Date)
       Max_High = round((Data["ch_high"].max() / Strike_Gep), 0) * Strike_Gep
@@ -1485,7 +1486,7 @@ def get_strike_list(stock_name, Expiry_Date, OTM, ITM, Strike_Gep):
 def get_Expirys_strike_List(stock_name, Expirys_List, OTM, ITM, Strike_Gep):
     Expirys_strike_List = {}
     with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = {executor.submit(get_strike_list, stock_name, Expiry_Date, OTM, ITM, Strike_Gep): Expiry_Date for Expiry_Date in Expirys_List}
+        futures = {executor.submit(get_strike_list, breeze, GitHub_API, stock_name, Expiry_Date, OTM, ITM, Strike_Gep): Expiry_Date for Expiry_Date in Expirys_List}
         for future in as_completed(futures):
             expiry = futures[future]
             result = future.result()   # only once
