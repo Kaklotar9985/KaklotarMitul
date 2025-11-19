@@ -740,7 +740,9 @@ def GitHub_rate_limiter():
     if GitHub_API_Call_Count > GitHub_API_CALL_LIMIT:
         sleep_time = 3600 - elapsed
         if sleep_time > 0:
-            print(f"⏳ GitHub API limit reached → Waiting for {int(sleep_time)} seconds...")
+            Msg = f"⏳ GitHub API limit reached → Waiting for {int(sleep_time)} seconds..."
+            ICICI.Telegram_Message(Msg)
+            print(Msg)
             time.sleep(sleep_time)
         # Reset after waiting
         GitHub_API_Call_Count = 1
