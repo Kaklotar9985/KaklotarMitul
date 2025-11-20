@@ -1166,7 +1166,7 @@ def GitHub_Multi_download(GitHub_API, stock_name):
     print("GitHub_Multi_Download Total Files Found:", len(download_list))
     downloaded = []
     MAX_THREADS = min(8, len(download_list)) # Safe thread count (GitHub raw handles max 8 well)
-    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+    with ThreadPoolExecutor(max_workers = max(MAX_THREADS,1)) as executor:
         futures = [executor.submit(GitHub_Single_Download, GitHub_API, folder, f)
                    for f in download_list]
         for future in as_completed(futures):
