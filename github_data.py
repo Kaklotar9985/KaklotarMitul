@@ -1116,101 +1116,69 @@ def get_Historical_Data(breeze, GitHub_API, stock_name, Expiry_Date, strike_pric
 #             print(tabulate(pd.concat([Data.head(3), Data.tail(3)]), headers="keys", tablefmt="psql"))
 ##=========================================================================================================================================================================================================================================================================================
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import requests
-import re
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  GitHub_Single_download   GitHub_Single_download   GitHub_Single_download   GitHub_Single_download   GitHub_Single_download   GitHub_Single_download#  GitHub_Single_download   GitHub_Single_download   GitHub_Single_download   GitHub_Single_download   GitHub_Single_download
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def GitHub_Single_download(GitHub_API, stock_name, path):
-    owner        = GitHub_API["owner"]
-    repo_name    = GitHub_API["repo_name"]
-    headers      = GitHub_API["headers"]
-    download_url = f"https://raw.githubusercontent.com/{owner}/{repo_name}/main/{path}"
-    file_name    = os.path.basename(path)
-
-    try:
-        r = requests.get(download_url, headers=headers, timeout=20)
-        if r.status_code == 200:
-            with open(os.path.join(stock_name, file_name), "wb") as f:
-                f.write(r.content)
-            return file_name
-        else:
-            print(f"❌ Failed ({r.status_code}): {file_name}")
-            return None
-    except Exception as e:
-        print(f"❌ Error downloading {file_name}: {e}")
-        return None
-# # Example usage
-# stock_name = "nifty"
-# Path = "nifty/2025/10/28-10-2025/28-10-2025_25300_call.csv.gz"
-# os.makedirs(stock_name, exist_ok=True)
-# File = GitHub_Single_download(GitHub_API,stock_name, Path)
-# print(File)
-##=========================================================================================================================================================================================================================================================================================
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#  GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files#  GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files   GitHub_List_Files
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def GitHub_List_Files(GitHub_API, stock_name=""):
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
+import os
+import time
+def GitHub_Get_All_Files_OneCall(GitHub_API):
     owner     = GitHub_API["owner"]
     repo_name = GitHub_API["repo_name"]
     headers   = GitHub_API["headers"]
-    url = f"https://api.github.com/repos/{owner}/{repo_name}/contents/{stock_name}"
-    r = requests.get(url, headers=headers)
+    url = f"https://api.github.com/repos/{owner}/{repo_name}/git/trees/main?recursive=1"
+    r = requests.get(url, headers=headers, timeout=20)
     if r.status_code != 200:
-        print("❌ Error listing:", stock_name)
+        print("❌ Error fetching tree:", r.status_code)
         return []
+    tree = r.json().get("tree", [])
+    return [item["path"] for item in tree if item["path"].endswith(".csv.gz")]
 
-    items = r.json()
-    all_files = []
+def GitHub_Single_Download(GitHub_API, folder, path, retries=3):
+    owner     = GitHub_API["owner"]
+    repo_name = GitHub_API["repo_name"]
+    headers   = GitHub_API["headers"]
+    raw_url = f"https://raw.githubusercontent.com/{owner}/{repo_name}/main/{path}"
+    file_name = os.path.basename(path)
+    save_path = os.path.join(folder, file_name)
+    for attempt in range(1, retries + 1):
+        try:
+            with requests.get(raw_url, headers=headers, timeout=40, stream=True) as r:
+                if r.status_code == 200:
+                    with open(save_path, "wb") as f:
+                        for chunk in r.iter_content(chunk_size=1024 * 1024):  # 1 MB chunks
+                            if chunk:
+                                f.write(chunk)
+                    return file_name
+                else:
+                    print(f"❌ GitHub_Single_Download Failed ({r.status_code}):", file_name)
+        except Exception as e:
+            print(f"⚠ GitHub_Single_Download Retry {attempt}/{retries} for {file_name}: {e}")
+            time.sleep(1)
+    return None
 
-    with ThreadPoolExecutor(max_workers=max(1, len(items))) as executor: # THREADPOOL START
-        futures = []
-        for item in items:
-            if item["type"] == "file":
-                if item["path"].endswith(".csv.gz"):
-                   all_files.append(item["path"])
-            elif item["type"] == "dir":
-                futures.append(executor.submit(GitHub_List_Files, GitHub_API, item["path"]))
-        for future in as_completed(futures):# सभी threads के result merge करो
-            sub_files = future.result()
-            for f in sub_files:
-                if f.endswith(".csv.gz"):
-                    all_files.append(f)
-    return all_files
-
-# # Example usage
-# stock_name = "nifty"
-# all_files = list_files(GitHub_API, stock_name)
-# print("Total CSV.GZ Files Found:", len(all_files))
-##=========================================================================================================================================================================================================================================================================================
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#  GitHub_Multi_download   GitHub_Multi_download   GitHub_Multi_download   GitHub_Multi_download   GitHub_Multi_download   GitHub_Multi_download#  GitHub_Multi_download   GitHub_Multi_download   GitHub_Multi_download   GitHub_Multi_download   GitHub_Multi_download
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def GitHub_Multi_download(GitHub_API, stock_name):
-    safe_stock = re.sub(r'[^A-Za-z0-9_-]', '_', stock_name.lower())
-    path = f"/content/{safe_stock}"
-    os.makedirs(path, exist_ok=True)
-    Downloaded_count = sum(1 for f in os.listdir(path) if f.lower().endswith(".csv.gz"))
-    raw_urls = GitHub_List_Files(GitHub_API, safe_stock)
-    GitHub_count = len(raw_urls)
-    if GitHub_count <= Downloaded_count:
-       return []
+    folder = f"/content/{stock_name}"
+    os.makedirs(folder, exist_ok=True)
+    all_files = GitHub_Get_All_Files_OneCall(GitHub_API)
+    download_list = [f for f in all_files if f.startswith(stock_name)]
+    print("GitHub_Multi_Download Total Files Found:", len(download_list))
     downloaded = []
-    with ThreadPoolExecutor(max_workers=max(1, len(raw_urls))) as executor:
-        futures = [executor.submit(GitHub_Single_download, GitHub_API, safe_stock, path) for path in raw_urls]
-        for f in as_completed(futures):
-            result = f.result()
+    MAX_THREADS = min(8, len(download_list)) # Safe thread count (GitHub raw handles max 8 well)
+    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        futures = [executor.submit(GitHub_Single_Download, GitHub_API, folder, f)
+                   for f in download_list]
+        for future in as_completed(futures):
+            result = future.result()
             if result:
                 downloaded.append(result)
+    print("GitHub_Multi_Downloaded:", len(downloaded))
     return downloaded
 
 # # Example usage
-# stock_name = "nifty" #"nifty", "nifty bank" "reliance"
-# downloaded = GitHub_Multi_download(GitHub_API, stock_name)
-# print("Downloaded Files:", len(downloaded))
+# downloaded = GitHub_Multi_Download_OneCall(GitHub_API, "nifty")
+# print("Downloaded:", len(downloaded))
 ##=========================================================================================================================================================================================================================================================================================
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
