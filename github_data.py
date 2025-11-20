@@ -32,6 +32,9 @@ def ICICI_Login(session_token, APIKEY, SecretKey):
         return None
 #=======================================================================================================================================================================
 
+
+#=======================================================================================================================================================================
+
 banknifty_monthly_expiry = ['28-01-2021', '25-02-2021', '25-03-2021', '29-04-2021', '27-05-2021', '24-06-2021', '29-07-2021', '26-08-2021', '30-09-2021', '28-10-2021', '25-11-2021', '30-12-2021',
                             '27-01-2022', '24-02-2022', '31-03-2022', '28-04-2022', '26-05-2022', '30-06-2022', '28-07-2022', '25-08-2022', '29-09-2022', '27-10-2022', '24-11-2022', '29-12-2022',
                             '25-01-2023', '23-02-2023', '29-03-2023', '27-04-2023', '25-05-2023', '28-06-2023', '27-07-2023', '31-08-2023', '28-09-2023', '26-10-2023', '30-11-2023', '28-12-2023',
@@ -723,6 +726,7 @@ import os
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # GitHub_rate_limiter   GitHub_rate_limiter   GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter  GitHub_GitHub_rate_limiter   GitHub_rate_limiter
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+import time
 GitHub_API_CALL_LIMIT = 5000       # GitHub authenticated limit per hour
 GitHub_API_Call_Count = 0
 GitHub_API_Start_Time = time.time()
@@ -1512,8 +1516,8 @@ def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry
             if not strike_list:
                 print(f"No strikes for {Options_Type} on {Expiry_Date}, skipping.")
                 continue
-
-            with ThreadPoolExecutor(max_workers=max(len(strike_list), 1)) as executor:
+            max_workers = 2 # max(len(strike_list), 1)
+            with ThreadPoolExecutor(max_workers = max_workers) as executor:
                 futures = {executor.submit(get_Historical_Data,breeze,GitHub_API,stock_name,Expiry_Date,strike_price,Options_Type, Start_Date=60, End_Date=0):  # get_Historical_Data  get_Downloaded_Data
                                           strike_price for strike_price in strike_list}
 
@@ -1547,7 +1551,6 @@ def get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry
 # ITM         = 15
 # get_GitHub_Data_Update(breeze, GitHub_API, stock_name, Expiry_Period, Expiry_Type, Start_Date, End_Date, OTM, ITM)
 #=========================================================================================================================================================================================================================================================================================
-
 
 
 
