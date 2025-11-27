@@ -1367,12 +1367,12 @@ def get_Index_Data(breeze, GitHub_API, stock_name, Start_Date, End_Date, GitHub_
 # print(tabulate(pd.concat([Data.head(3), Data.tail(3)]), headers="keys", tablefmt="psql"))
 #=========================================================================================================================================================================================================================================================================================
 
-if market_open_dates is None:
-   get_market_open_dates(breeze)
-for stock_name in ["nifty", "nifty bank", "reliance"]:
-   safe_stock = re.sub(r'[^A-Za-z0-9_-]', '_', stock_name.lower())
-   if not os.path.isdir(f"/content/{safe_stock}"):
-       downloaded = GitHub_Multi_download(GitHub_API,stock_name)
+# if market_open_dates is None:
+#    get_market_open_dates(breeze)
+# for stock_name in ["nifty", "nifty bank", "reliance"]:
+#    safe_stock = re.sub(r'[^A-Za-z0-9_-]', '_', stock_name.lower())
+#    if not os.path.isdir(f"/content/{safe_stock}"):
+#        downloaded = GitHub_Multi_download(GitHub_API,stock_name)
 
 # #----- Start Time ----
 # import time
