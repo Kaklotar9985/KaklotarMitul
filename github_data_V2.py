@@ -1340,8 +1340,8 @@ def get_Index_Data(breeze, GitHub_API, stock_name, Start_Date, End_Date, GitHub_
         return (Price / Strike_Gep).round() * Strike_Gep
     def get_ATM_Strike(merged_data, stock_name):
         Strike_Gep = get_Strike_Gep(stock_name)
-        merged_data["ch_atm"] = (merged_data["ch_close"] / Strike_Gep).round() * Strike_Gep
-        merged_data["fu_atm"] = (merged_data["fu_close"] / Strike_Gep).round() * Strike_Gep
+        merged_data["ch_atm"] = (merged_data["ch_open"] / Strike_Gep).round() * Strike_Gep
+        merged_data["fu_atm"] = (merged_data["fu_open"] / Strike_Gep).round() * Strike_Gep
         return merged_data
 
     Ch_data = get_Cash_Futures_Data(breeze, GitHub_API, stock_name, Options_Type = "ch", Start_Date=Start_Date, End_Date=End_Date, GitHub_Update=GitHub_Update)
