@@ -34,7 +34,7 @@ def ICICI_Login(session_token, APIKEY, SecretKey):
         return None
 
 GitHub_API = None
-def Global_GitHub_API(GitHub_Data)
+def Global_GitHub_API(GitHub_Data):
     global GitHub_API
     GitHub_API = GitHub_Data
 #=======================================================================================================================================================================
