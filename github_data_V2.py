@@ -13,7 +13,9 @@ def get_session_token_Link(APIKEY,TOTP):
 # # Example usage
 # get_session_token_Link(APIKEY,TOTP)
 
+breeze = None
 def ICICI_Login(session_token, APIKEY, SecretKey):
+    global breeze
     try:
         if not session_token:
             login_url = f"https://api.icicidirect.com/apiuser/login?api_key={urllib.parse.quote_plus(APIKEY)}"
@@ -30,8 +32,12 @@ def ICICI_Login(session_token, APIKEY, SecretKey):
         print("Please login using this link to generate session_token:\n",)
         print(login_url,"\n")
         return None
-#=======================================================================================================================================================================
 
+GitHub_API = None
+def Global_GitHub_API(GitHub_Data)
+    global GitHub_API
+    GitHub_API = GitHub_Data
+#=======================================================================================================================================================================
 
 banknifty_monthly_expiry = ['28-01-2021', '25-02-2021', '25-03-2021', '29-04-2021', '27-05-2021', '24-06-2021', '29-07-2021', '26-08-2021', '30-09-2021', '28-10-2021', '25-11-2021', '30-12-2021',
                             '27-01-2022', '24-02-2022', '31-03-2022', '28-04-2022', '26-05-2022', '30-06-2022', '28-07-2022', '25-08-2022', '29-09-2022', '27-10-2022', '24-11-2022', '29-12-2022',
